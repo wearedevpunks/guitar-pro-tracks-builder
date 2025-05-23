@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Guitar Pro Tracks Builder application with a hybrid Next.js + FastAPI architecture:
 
-- **Frontend**: Next.js 13 React app in `/app` using TypeScript, Tailwind CSS, and the AI SDK for chat interface
+- **Frontend**: Next.js 13 React app with homepage (`/`) for file upload and track builder (`/track`) using TypeScript, Tailwind CSS, and the AI SDK for chat interface
 - **Backend**: FastAPI Python server in `/api` that provides OpenAI-powered chat completion with tool calling
 - **Deployment**: Configured for Vercel with API rewrites to proxy FastAPI endpoints
 
@@ -60,3 +60,11 @@ pnpm lint      # Run ESLint
 - Node.js with pnpm
 - Python 3.x with virtual environment
 - OpenAI API key (required for chat functionality)
+
+## Code Structure Guidelines
+
+- Always split UI components and functional components
+- Create a `features` folder with a subfolder for each business feature
+- Place functional components inside their respective feature subfolder
+- Add Zustand state management as necessary for each feature
+- Organize related utilities, hooks, and state management within feature-specific folders
