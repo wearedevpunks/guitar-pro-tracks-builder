@@ -68,3 +68,4 @@ pnpm lint      # Run ESLint
 - Place functional components inside their respective feature subfolder
 - Add Zustand state management as necessary for each feature
 - Organize related utilities, hooks, and state management within feature-specific folders
+- To keep app routes clean create a page component under a folder named containers inside a subfolder named under the page. The container is built aggregating one or more feature components / ui components
