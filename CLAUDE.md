@@ -12,6 +12,18 @@ This is a Guitar Pro Tracks Builder application with a hybrid Next.js + FastAPI 
 
 The frontend uses the AI SDK's `useChat` hook to communicate with the FastAPI backend, which implements OpenAI's streaming protocol with tool support (currently weather tools).
 
+### Frontend Structure
+
+- **Components**: Split into UI and functional components
+  - `/components/ui/` - Reusable UI components
+  - `/components/ui/metal/` - Metal-themed UI components (buttons, logos, backgrounds)
+- **Features**: Business logic organized by feature
+  - `/features/file-upload/` - File upload functionality with components and logic
+- **Containers**: Page-level components that aggregate features
+  - `/containers/home/` - Homepage container aggregating UI and features
+- **Stores**: Zustand state management
+  - `/stores/file-upload-store.ts` - File upload state management
+
 ## Development Commands
 
 ### Setup
