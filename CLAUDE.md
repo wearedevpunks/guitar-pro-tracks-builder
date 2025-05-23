@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-This is a guitar pro tracks builder application with a hybrid Next.js + FastAPI architecture:
+This is a Guitar Pro Tracks Builder application with a hybrid Next.js + FastAPI architecture:
 
 - **Frontend**: Next.js 13 React app in `/app` using TypeScript, Tailwind CSS, and the AI SDK for chat interface
 - **Backend**: FastAPI Python server in `/api` that provides OpenAI-powered chat completion with tool calling
