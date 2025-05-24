@@ -54,19 +54,19 @@ class AwsS3FileProvider(FileProviderBase):
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == '404':
-                self.logger.error(f"S3 bucket '{self.bucket_name}' does not exist")
+                self.logger.exception(f"S3 bucket '{self.bucket_name}' does not exist")
                 raise ValueError(f"Bucket '{self.bucket_name}' does not exist")
             elif error_code == '403':
-                self.logger.error(f"Access denied to S3 bucket '{self.bucket_name}'")
+                self.logger.exception(f"Access denied to S3 bucket '{self.bucket_name}'")
                 raise ValueError(f"Access denied to bucket '{self.bucket_name}'")
             else:
-                self.logger.error(f"Error accessing S3 bucket '{self.bucket_name}': {e}")
+                self.logger.exception(f"Error accessing S3 bucket '{self.bucket_name}': {e}")
                 raise ValueError(f"Error accessing bucket '{self.bucket_name}': {e}")
         except NoCredentialsError as e:
-            self.logger.error("AWS credentials not found")
+            self.logger.exception("AWS credentials not found")
             raise ValueError("AWS credentials not found. Please configure AWS credentials.") from e
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error: {e}")
+            self.logger.exception(f"AWS configuration error: {e}")
             raise ValueError(f"AWS configuration error: {e}") from e
     
     @classmethod
@@ -98,16 +98,16 @@ class AwsS3FileProvider(FileProviderBase):
             self.logger.info(f"Successfully saved file to S3: {s3_key}")
             return True
         except ClientError as e:
-            self.logger.error(f"AWS error saving file {s3_key}: {e}")
+            self.logger.exception(f"AWS error saving file {s3_key}: {e}")
             return False
         except (IOError, OSError) as e:
-            self.logger.error(f"File I/O error saving {s3_key}: {e}")
+            self.logger.exception(f"File I/O error saving {s3_key}: {e}")
             return False
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error saving {s3_key}: {e}")
+            self.logger.exception(f"AWS configuration error saving {s3_key}: {e}")
             return False
         except Exception as e:
-            self.logger.error(f"Unexpected error saving file {s3_key}: {e}")
+            self.logger.exception(f"Unexpected error saving file {s3_key}: {e}")
             return False
     
     async def get_file(self, file_path: str) -> Optional[bytes]:
@@ -127,13 +127,13 @@ class AwsS3FileProvider(FileProviderBase):
             if e.response['Error']['Code'] == 'NoSuchKey':
                 self.logger.debug(f"File not found in S3: {s3_key}")
                 return None
-            self.logger.error(f"AWS error getting file {s3_key}: {e}")
+            self.logger.exception(f"AWS error getting file {s3_key}: {e}")
             return None
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error getting {s3_key}: {e}")
+            self.logger.exception(f"AWS configuration error getting {s3_key}: {e}")
             return None
         except Exception as e:
-            self.logger.error(f"Unexpected error getting file {s3_key}: {e}")
+            self.logger.exception(f"Unexpected error getting file {s3_key}: {e}")
             return None
     
     async def delete_file(self, file_path: str) -> bool:
@@ -149,13 +149,13 @@ class AwsS3FileProvider(FileProviderBase):
             self.logger.info(f"Successfully deleted file from S3: {s3_key}")
             return True
         except ClientError as e:
-            self.logger.error(f"AWS error deleting file {s3_key}: {e}")
+            self.logger.exception(f"AWS error deleting file {s3_key}: {e}")
             return False
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error deleting {s3_key}: {e}")
+            self.logger.exception(f"AWS configuration error deleting {s3_key}: {e}")
             return False
         except Exception as e:
-            self.logger.error(f"Unexpected error deleting file {s3_key}: {e}")
+            self.logger.exception(f"Unexpected error deleting file {s3_key}: {e}")
             return False
     
     async def file_exists(self, file_path: str) -> bool:
@@ -174,13 +174,13 @@ class AwsS3FileProvider(FileProviderBase):
             if e.response['Error']['Code'] == '404':
                 self.logger.debug(f"File does not exist in S3: {s3_key}")
                 return False
-            self.logger.error(f"AWS error checking file existence {s3_key}: {e}")
+            self.logger.exception(f"AWS error checking file existence {s3_key}: {e}")
             return False
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error checking {s3_key}: {e}")
+            self.logger.exception(f"AWS configuration error checking {s3_key}: {e}")
             return False
         except Exception as e:
-            self.logger.error(f"Unexpected error checking file existence {s3_key}: {e}")
+            self.logger.exception(f"Unexpected error checking file existence {s3_key}: {e}")
             return False
     
     async def list_files(self, directory_path: str = "") -> List[str]:
@@ -207,13 +207,13 @@ class AwsS3FileProvider(FileProviderBase):
             self.logger.debug(f"Found {len(files)} files in S3 with prefix: {prefix}")
             return files
         except ClientError as e:
-            self.logger.error(f"AWS error listing files with prefix {prefix}: {e}")
+            self.logger.exception(f"AWS error listing files with prefix {prefix}: {e}")
             return []
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error listing files: {e}")
+            self.logger.exception(f"AWS configuration error listing files: {e}")
             return []
         except Exception as e:
-            self.logger.error(f"Unexpected error listing files with prefix {prefix}: {e}")
+            self.logger.exception(f"Unexpected error listing files with prefix {prefix}: {e}")
             return []
     
     async def get_file_size(self, file_path: str) -> Optional[int]:
@@ -233,13 +233,13 @@ class AwsS3FileProvider(FileProviderBase):
             if e.response['Error']['Code'] == '404':
                 self.logger.debug(f"File not found in S3: {s3_key}")
                 return None
-            self.logger.error(f"AWS error getting file size {s3_key}: {e}")
+            self.logger.exception(f"AWS error getting file size {s3_key}: {e}")
             return None
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error getting file size {s3_key}: {e}")
+            self.logger.exception(f"AWS configuration error getting file size {s3_key}: {e}")
             return None
         except Exception as e:
-            self.logger.error(f"Unexpected error getting file size {s3_key}: {e}")
+            self.logger.exception(f"Unexpected error getting file size {s3_key}: {e}")
             return None
     
     async def copy_file(self, source_path: str, destination_path: str) -> bool:
@@ -267,13 +267,13 @@ class AwsS3FileProvider(FileProviderBase):
             self.logger.info(f"Successfully copied file in S3 from {source_key} to {dest_key}")
             return True
         except ClientError as e:
-            self.logger.error(f"AWS error copying file from {source_key} to {dest_key}: {e}")
+            self.logger.exception(f"AWS error copying file from {source_key} to {dest_key}: {e}")
             return False
         except BotoCoreError as e:
-            self.logger.error(f"AWS configuration error copying file: {e}")
+            self.logger.exception(f"AWS configuration error copying file: {e}")
             return False
         except Exception as e:
-            self.logger.error(f"Unexpected error copying file from {source_key} to {dest_key}: {e}")
+            self.logger.exception(f"Unexpected error copying file from {source_key} to {dest_key}: {e}")
             return False
     
     async def move_file(self, source_path: str, destination_path: str) -> bool:
@@ -294,5 +294,5 @@ class AwsS3FileProvider(FileProviderBase):
                     return False
             return False
         except Exception as e:
-            self.logger.error(f"Unexpected error moving file from {source_key} to {dest_key}: {e}")
+            self.logger.exception(f"Unexpected error moving file from {source_key} to {dest_key}: {e}")
             return False

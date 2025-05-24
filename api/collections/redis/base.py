@@ -72,7 +72,7 @@ class RedisCollectionBase(TimestampedCollectionBase[T]):
         try:
             return self.model_class.model_validate_json(data)
         except ValidationError as e:
-            self.logger.error(f"Failed to deserialize item: {e}")
+            self.logger.exception(f"Failed to deserialize item: {e}")
             raise ValueError(f"Invalid data format for {self.model_class.__name__}") from e
     
     async def create(self, item: T, item_id: Optional[str] = None) -> str:
@@ -121,7 +121,7 @@ class RedisCollectionBase(TimestampedCollectionBase[T]):
             self.logger.debug(f"Successfully read item: {item_id}")
             return item
         except ValueError as e:
-            self.logger.error(f"Failed to deserialize item {item_id}: {e}")
+            self.logger.exception(f"Failed to deserialize item {item_id}: {e}")
             return None
     
     async def update(self, item_id: str, item: T) -> bool:
@@ -252,7 +252,7 @@ class RedisCollectionBase(TimestampedCollectionBase[T]):
             return True
         
         except Exception as e:
-            self.logger.error(f"Failed to clear collection: {e}")
+            self.logger.exception(f"Failed to clear collection: {e}")
             return False
     
     # Timestamp-related methods
@@ -306,7 +306,7 @@ class RedisCollectionBase(TimestampedCollectionBase[T]):
                 timestamps[key] = datetime.fromisoformat(value)
             return timestamps
         except ValueError as e:
-            self.logger.error(f"Invalid timestamp format for item {item_id}: {e}")
+            self.logger.exception(f"Invalid timestamp format for item {item_id}: {e}")
             return None
     
     async def search(self, query: str, fields: Optional[List[str]] = None, limit: int = 100) -> List[T]:

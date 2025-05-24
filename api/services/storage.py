@@ -154,7 +154,7 @@ class FileStorageService:
             return dest_ref
             
         except Exception as e:
-            self.logger.error(f"Error copying file from {source_ref} to {destination_path}: {e}")
+            self.logger.exception(f"Error copying file from {source_ref} to {destination_path}: {e}")
             return None
     
     async def move_file_reference(self, source_ref: FileReference, destination_path: str,
@@ -247,7 +247,7 @@ class FileStorageService:
             return content
             
         except ValueError as e:
-            self.logger.error(f"Error getting file {file_ref}: {e}")
+            self.logger.exception(f"Error getting file {file_ref}: {e}")
             return None
     
     async def delete_file(self, file_ref: Union[str, FileReference]) -> bool:
@@ -280,7 +280,7 @@ class FileStorageService:
             return result
             
         except ValueError as e:
-            self.logger.error(f"Error deleting file {file_ref}: {e}")
+            self.logger.exception(f"Error deleting file {file_ref}: {e}")
             return False
     
     async def file_exists(self, file_ref: Union[str, FileReference]) -> bool:
@@ -307,7 +307,7 @@ class FileStorageService:
             return exists
             
         except ValueError as e:
-            self.logger.error(f"Error checking file existence {file_ref}: {e}")
+            self.logger.exception(f"Error checking file existence {file_ref}: {e}")
             return False
     
     async def list_files(self, directory_path: str = "") -> List[str]:
@@ -353,7 +353,7 @@ class FileStorageService:
             return size
             
         except ValueError as e:
-            self.logger.error(f"Error getting file size {file_ref}: {e}")
+            self.logger.exception(f"Error getting file size {file_ref}: {e}")
             return None
     
     async def copy_file(self, source_path: str, destination_path: str) -> bool:
