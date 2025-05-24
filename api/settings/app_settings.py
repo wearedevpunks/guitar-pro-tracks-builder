@@ -45,6 +45,17 @@ class AppSettings:
         
         # Environment
         self.environment = os.getenv("ENVIRONMENT", "development")
+        
+        # AWS settings
+        self.aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+        self.aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        self.aws_region = os.getenv("AWS_REGION", "us-east-1")
+        self.aws_s3_bucket = os.getenv("AWS_S3_BUCKET")
+        self.aws_s3_prefix = os.getenv("AWS_S3_PREFIX", "")
+        
+        # Logging settings
+        self.log_level = os.getenv("LOG_LEVEL", "INFO")
+        self.log_file = os.getenv("LOG_FILE")
     
     @property
     def is_production(self) -> bool:
