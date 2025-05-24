@@ -1,8 +1,5 @@
 import { useFileUploadLogic } from "./hooks/use-file-upload-logic";
-import { FileUploadContainer } from "./components/file-upload-container";
 import { FileDropZone } from "./components/file-drop-zone";
-import { ContinueButton } from "./components/actions/continue-button";
-import { StartFromScratch } from "./components/actions/start-from-scratch";
 
 export function FileUploadFeature() {
   const {
@@ -13,14 +10,24 @@ export function FileUploadFeature() {
   } = useFileUploadLogic();
 
   return (
-    <FileUploadContainer>
+    <div className="w-full max-w-lg space-y-4">
       <FileDropZone onFileSelect={handleFileSelect} />
 
       {uploadedFile && (
-        <ContinueButton onContinue={handleContinue} />
+        <button
+          onClick={handleContinue}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Continue with file
+        </button>
       )}
 
-      <StartFromScratch onStart={handleStartWithoutFile} />
-    </FileUploadContainer>
+      <button
+        onClick={handleStartWithoutFile}
+        className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+      >
+        Start without file
+      </button>
+    </div>
   );
 }
