@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from .redis_collection import RedisCollectionBase
+from .base import RedisCollectionBase
 from api.infrastructure.logging import get_logger
 
 

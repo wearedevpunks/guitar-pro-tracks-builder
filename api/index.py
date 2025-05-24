@@ -9,6 +9,7 @@ from openai import OpenAI
 from api.utils.prompt import ClientMessage, convert_to_openai_messages
 from api.utils.tools import get_current_weather
 from api.settings.app_settings import settings
+from api.routes import songs_router
 
 
 load_dotenv(".env.local")
@@ -20,6 +21,9 @@ app = FastAPI(
     docs_url="/swagger",
     redoc_url="/redoc"
 )
+
+# Include routers
+app.include_router(songs_router)
 
 client = OpenAI(
     api_key=settings.openai_api_key,
