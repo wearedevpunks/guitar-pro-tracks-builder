@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any, TypeVar, Generic
 from datetime import datetime
 
+
 # Generic type for collection items
 T = TypeVar('T')
 
