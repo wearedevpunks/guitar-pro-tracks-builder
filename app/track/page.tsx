@@ -1,5 +1,5 @@
-import { Chat } from "@/components/chat";
+import { TrackPageContainer } from "@/containers/track/track-page-container";
 
 export default function Page() {
-  return <Chat />;
+  return <TrackPageContainer />;
 }

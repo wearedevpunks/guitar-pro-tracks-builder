@@ -16,13 +16,29 @@ The frontend uses the AI SDK's `useChat` hook to communicate with the FastAPI ba
 
 - **Components**: Split into UI and functional components
   - `/components/ui/` - Reusable UI components
-  - `/components/ui/metal/` - Metal-themed UI components (buttons, logos, backgrounds)
-- **Features**: Business logic organized by feature
-  - `/features/file-upload/` - File upload functionality with components and logic
+  - `/components/ui/metal/` - Metal-themed UI components (buttons, logos, backgrounds, forms, containers)
+- **Features**: Business logic organized by feature with granular components
+  - `/features/file-upload/` - File upload functionality
+    - `components/` - Drop zone, action buttons, containers
+    - `hooks/` - Upload logic and state management
+  - `/features/chat/` - Chat functionality with AI integration
+    - `components/` - Messages area, input area, overview
+    - `components/messages/` - Message container, list, scroll anchor
+    - `hooks/` - Chat logic and API integration
 - **Containers**: Page-level components that aggregate features
-  - `/containers/home/` - Homepage container aggregating UI and features
+  - `/containers/home/` - Homepage container with hero section and file upload
+  - `/containers/track/` - Track builder page container with chat interface
 - **Stores**: Zustand state management
   - `/stores/file-upload-store.ts` - File upload state management
+  - `/stores/chat-store.ts` - Chat state and message management
+
+### Component Breakdown Principles
+
+- **Single Responsibility**: Each component has one clear purpose
+- **Composition**: Components are composed together rather than monolithic
+- **Hooks**: Business logic extracted into custom hooks
+- **Separation**: UI components separated from logic components
+- **Reusability**: Granular components can be reused across features
 
 ## Development Commands
 

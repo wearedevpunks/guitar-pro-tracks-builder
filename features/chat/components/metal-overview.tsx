@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
-
-import { MessageIcon } from "./icons";
+import { MessageIcon } from "@/components/icons";
 import { Guitar, Skull, Zap } from "lucide-react";
 
-export const Overview = () => {
+export function MetalOverview() {
   return (
     <motion.div
       key="overview"
@@ -13,7 +12,7 @@ export const Overview = () => {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ delay: 0.5 }}
     >
-      <div className="rounded-xl p-6 flex flex-col gap-8 leading-relaxed text-center max-w-xl">
+      <div className="rounded-xl p-6 flex flex-col gap-8 leading-relaxed text-center max-w-xl skull-shadow bg-gradient-to-br from-red-950/20 to-orange-950/10 border border-red-900/30">
         <div className="flex flex-row justify-center gap-4 items-center mb-6">
           <div className="relative flame-glow">
             <Guitar className="w-12 h-12 text-red-500" />
@@ -39,4 +38,4 @@ export const Overview = () => {
       </div>
     </motion.div>
   );
-};
+}
