@@ -25,6 +25,7 @@ class AppSettings:
         self.openai_model = os.getenv("OPENAI_MODEL", "gpt-4")
         
         # File storage settings
+        self.storage_provider = os.getenv("STORAGE_PROVIDER", "local")  # local or s3
         self.storage_base_path = os.getenv("STORAGE_BASE_PATH", "uploads")
         self.max_file_size = int(os.getenv("MAX_FILE_SIZE", "10485760"))  # 10MB default
         
