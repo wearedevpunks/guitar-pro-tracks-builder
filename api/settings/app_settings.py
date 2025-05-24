@@ -29,8 +29,8 @@ class AppSettings:
         self.max_file_size = int(os.getenv("MAX_FILE_SIZE", "10485760"))  # 10MB default
         
         # Server settings
-        self.host = os.getenv("HOST", "0.0.0.0")
-        self.port = int(os.getenv("PORT", "8000"))
+        self.host = os.getenv("API_HOST", "0.0.0.0")
+        self.port = int(os.getenv("API_PORT", "8000"))
         self.debug = os.getenv("DEBUG", "false").lower() == "true"
         
         # Redis settings (if using Redis for collections)
@@ -40,16 +40,13 @@ class AppSettings:
         # CORS settings
         self.cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
         
-        # Security settings
-        self.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-        
         # Environment
         self.environment = os.getenv("ENVIRONMENT", "development")
         
         # AWS settings
         self.aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
         self.aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-        self.aws_region = os.getenv("AWS_REGION", "us-east-1")
+        self.aws_region = os.getenv("AWS_REGION")
         self.aws_s3_bucket = os.getenv("AWS_S3_BUCKET")
         self.aws_s3_prefix = os.getenv("AWS_S3_PREFIX", "")
         

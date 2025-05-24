@@ -1,61 +1,88 @@
-import os
 import json
 from typing import List
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, RedirectResponse
 from openai import OpenAI
 from api.utils.prompt import ClientMessage, convert_to_openai_messages
 from api.utils.tools import get_current_weather
+from api.settings.app_settings import settings
 
 
 load_dotenv(".env.local")
 
-app = FastAPI()
+app = FastAPI(
+    title="Tabbo API",
+    description="API for building and managing Guitar Pro tracks with AI assistance",
+    version="1.0.0",
+    docs_url="/swagger",
+    redoc_url="/redoc"
+)
 
 client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
+    api_key=settings.openai_api_key,
 )
 
 
 class Request(BaseModel):
+    """Chat request containing conversation messages."""
     messages: List[ClientMessage]
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "What's the weather like in New York?"
+                    }
+                ]
+            }
+        }
 
 
 available_tools = {
     "get_current_weather": get_current_weather,
 }
 
+# Tool configuration for OpenAI API
+TOOLS_CONFIG = [{
+    "type": "function",
+    "function": {
+        "name": "get_current_weather",
+        "description": "Get the current weather at a location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "type": "number",
+                    "description": "The latitude of the location",
+                },
+                "longitude": {
+                    "type": "number",
+                    "description": "The longitude of the location",
+                },
+            },
+            "required": ["latitude", "longitude"],
+        },
+    },
+}]
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Redirect to Swagger documentation."""
+    return RedirectResponse(url="/swagger")
+
 def do_stream(messages: List[ChatCompletionMessageParam]):
     stream = client.chat.completions.create(
         messages=messages,
-        model="gpt-4o",
+        model=settings.openai_model,
         stream=True,
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Get the current weather at a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "latitude": {
-                            "type": "number",
-                            "description": "The latitude of the location",
-                        },
-                        "longitude": {
-                            "type": "number",
-                            "description": "The longitude of the location",
-                        },
-                    },
-                    "required": ["latitude", "longitude"],
-                },
-            },
-        }]
+        tools=TOOLS_CONFIG
     )
-
     return stream
 
 def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'data'):
@@ -64,29 +91,9 @@ def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'dat
 
     stream = client.chat.completions.create(
         messages=messages,
-        model="gpt-4o",
+        model=settings.openai_model,
         stream=True,
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Get the current weather at a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "latitude": {
-                            "type": "number",
-                            "description": "The latitude of the location",
-                        },
-                        "longitude": {
-                            "type": "number",
-                            "description": "The longitude of the location",
-                        },
-                    },
-                    "required": ["latitude", "longitude"],
-                },
-            },
-        }]
+        tools=TOOLS_CONFIG
     )
 
     for chunk in stream:
@@ -113,14 +120,14 @@ def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'dat
 
             elif choice.delta.tool_calls:
                 for tool_call in choice.delta.tool_calls:
-                    id = tool_call.id
+                    call_id = tool_call.id
                     name = tool_call.function.name
                     arguments = tool_call.function.arguments
 
-                    if (id is not None):
+                    if call_id is not None:
                         draft_tool_calls_index += 1
                         draft_tool_calls.append(
-                            {"id": id, "name": name, "arguments": ""})
+                            {"id": call_id, "name": name, "arguments": ""})
 
                     else:
                         draft_tool_calls[draft_tool_calls_index]["arguments"] += arguments
@@ -128,14 +135,13 @@ def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'dat
             else:
                 yield '0:{text}\n'.format(text=json.dumps(choice.delta.content))
 
-        if chunk.choices == []:
+        if not chunk.choices:
             usage = chunk.usage
             prompt_tokens = usage.prompt_tokens
             completion_tokens = usage.completion_tokens
 
             yield 'e:{{"finishReason":"{reason}","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}},"isContinued":false}}\n'.format(
-                reason="tool-calls" if len(
-                    draft_tool_calls) > 0 else "stop",
+                reason="tool-calls" if draft_tool_calls else "stop",
                 prompt=prompt_tokens,
                 completion=completion_tokens
             )
@@ -143,11 +149,32 @@ def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'dat
 
 
 
-@app.post("/api/chat")
-async def handle_chat_data(request: Request, protocol: str = Query('data')):
+@app.post(
+    "/api/chat",
+    summary="Chat with AI Assistant",
+    description="Stream chat responses from OpenAI with tool calling support for weather information",
+    tags=["Chat"]
+)
+async def handle_chat_data(
+    request: Request, 
+    protocol: str = Query('data', description="Response protocol format")
+):
+    """
+    Chat with the AI assistant that can provide weather information.
+    
+    The endpoint returns a streaming response with the AI's messages and tool calls.
+    """
     messages = request.messages
     openai_messages = convert_to_openai_messages(messages)
 
-    response = StreamingResponse(stream_text(openai_messages, protocol))
+    response = StreamingResponse(
+        stream_text(openai_messages, protocol),
+        media_type="text/plain"
+    )
     response.headers['x-vercel-ai-data-stream'] = 'v1'
     return response
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host=settings.host, port=settings.port, log_level=settings.log_level.lower())
