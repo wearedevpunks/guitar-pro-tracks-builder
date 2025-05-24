@@ -89,11 +89,92 @@ pnpm lint      # Run ESLint
 - Python 3.x with virtual environment
 - OpenAI API key (required for chat functionality)
 
-## Code Structure Guidelines
+## Frontend Code Guidelines
 
+### Component Architecture
 - Always split UI components and functional components
 - Create a `features` folder with a subfolder for each business feature
 - Place functional components inside their respective feature subfolder
 - Add Zustand state management as necessary for each feature
 - Organize related utilities, hooks, and state management within feature-specific folders
 - To keep app routes clean create a page component under a folder named containers inside a subfolder named under the page. The container is built aggregating one or more feature components / ui components
+
+### Component Breakdown Principles
+- **Single Responsibility**: Each component has one clear purpose
+- **Composition**: Components are composed together rather than monolithic
+- **Hooks**: Business logic extracted into custom hooks
+- **Separation**: UI components separated from logic components
+- **Reusability**: Granular components can be reused across features
+
+## Python API Code Guidelines
+
+Follow SOLID principles and CQRS patterns for backend features:
+
+### Directory Structure
+```
+/api/features/{feature_name}/
+├── service.py           # Main service class with dependency injection
+├── commands/           # Command handlers (write operations)
+│   ├── __init__.py
+│   └── {action}.py     # e.g., create_tab.py
+├── queries/           # Query handlers (read operations)
+│   ├── __init__.py
+│   └── {action}.py    # e.g., get_tab.py
+└── __init__.py
+```
+
+### SOLID Implementation Guidelines
+
+- **Single Responsibility**: Each handler has one specific responsibility
+- **Open/Closed**: Use abstract base classes for extensibility without modification
+- **Liskov Substitution**: Concrete handlers implement abstract interfaces
+- **Interface Segregation**: Separate command and query interfaces
+- **Dependency Inversion**: Services depend on abstractions, use dependency injection
+
+### CQRS Pattern
+- **Commands**: Handle write operations (create, update, delete)
+  - Use `{Action}Command` for input models
+  - Use `{Action}Result` for output models
+  - Implement `{Action}Handler` abstract class
+  - Provide `{Action}HandlerImpl` concrete implementation
+- **Queries**: Handle read operations (get, list, search)
+  - Use `{Action}Query` for input models
+  - Use `{Action}Result` for output models
+  - Follow same handler pattern as commands
+
+### Service Layer
+- Main service class orchestrates command/query handlers
+- Use dependency injection with fallback to default implementations
+- Provide global service instance functions for convenience
+- Include comprehensive error handling and logging
+
+### Example Implementation
+```python
+from typing import Optional
+from abc import ABC, abstractmethod
+
+class ActionCommand(BaseModel):
+    # Command fields
+    pass
+
+class ActionResult(BaseModel):
+    # Result fields
+    pass
+
+class ActionHandler(ABC):
+    @abstractmethod
+    async def handle(self, command: ActionCommand) -> ActionResult:
+        pass
+
+class FeatureService:
+    def __init__(
+        self,
+        command_handler: Optional[ActionHandler] = None,
+        collection: Optional[CollectionType] = None
+    ):
+        self._command_handler = command_handler or DefaultHandlerImpl(collection)
+    
+    async def action_method(self, params) -> ActionResult:
+        command = ActionCommand(**params)
+        return await self._command_handler.handle(command)
+```
