@@ -178,3 +178,65 @@ class FeatureService:
         command = ActionCommand(**params)
         return await self._command_handler.handle(command)
 ```
+
+### Route Organization Pattern
+
+For FastAPI routes, use the following structure to keep code clean and maintainable:
+
+#### Directory Structure
+```
+/api/routes/{route_name}/
+├── __init__.py              # Exports router, DTOs, and actions
+├── dto.py                   # Data Transfer Objects (request/response models)
+├── routes.py               # Clean router interface only
+└── actions/                # Implementation logic
+    ├── __init__.py         # Action exports
+    ├── {action_name}.py    # Individual action implementations
+    └── ...
+```
+
+#### Implementation Guidelines
+
+- **routes.py**: Keep minimal, only FastAPI route definitions
+  - Route decorators and HTTP method handlers
+  - Parameter validation and dependency injection
+  - Delegate all logic to action functions
+  - Brief documentation
+
+- **dto.py**: Pydantic models for API contracts
+  - Request/response models
+  - Validation rules and examples
+  - Type definitions
+
+- **actions/{action_name}.py**: Business logic implementation
+  - Pure functions that handle the actual work
+  - Error handling and logging
+  - Service integrations
+  - Return DTOs directly
+
+#### Example Implementation
+```python
+# routes.py - Clean interface only
+@router.post("/new", response_model=CreateResponse)
+async def create_item(
+    data: CreateRequest,
+    service: Service = Depends(get_service)
+) -> CreateResponse:
+    """Create a new item."""
+    return await create_item_action(data, service)
+
+# actions/create_item.py - Implementation logic
+async def create_item_action(
+    data: CreateRequest,
+    service: Service
+) -> CreateResponse:
+    # All business logic here
+    pass
+```
+
+#### Benefits
+- **Separation of Concerns**: HTTP routing separate from business logic
+- **Reusability**: Actions can be imported and used elsewhere
+- **Testability**: Actions can be unit tested independently
+- **Maintainability**: Clear organization and single responsibility
+- **Scalability**: Easy to add new actions without cluttering routes
