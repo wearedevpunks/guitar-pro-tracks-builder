@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from openai import OpenAI
-from .utils.prompt import ClientMessage, convert_to_openai_messages
-from .utils.tools import get_current_weather
+from api.utils.prompt import ClientMessage, convert_to_openai_messages
+from api.utils.tools import get_current_weather
 
 
 load_dotenv(".env.local")
