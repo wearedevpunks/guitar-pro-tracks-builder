@@ -149,6 +149,7 @@ export function TrackEditorFeature({
                   <TrackDetails
                     track={parsedData.tracks[selectedTrack]}
                     trackIndex={selectedTrack}
+                    parsedData={parsedData}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
@@ -224,6 +225,7 @@ export function TrackEditorFeature({
 interface TrackDetailsProps {
   track: any
   trackIndex: number
+  parsedData: any
 }
 
 interface TuningInfo {
@@ -232,7 +234,7 @@ interface TuningInfo {
   midiValue: number
 }
 
-function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
+function TrackDetails({ track, trackIndex, parsedData }: TrackDetailsProps) {
   const [activeView, setActiveView] = useState<VisualizationType>("strings")
 
   const tabs = [
@@ -340,7 +342,7 @@ function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
         {activeView === "strings" && <StringsView track={track} />}
         {activeView === "measures" && <MeasuresView track={track} />}
         {activeView === "notes" && <NotesView track={track} />}
-        {activeView === "json" && <JsonView track={track} />}
+        {activeView === "json" && <JsonView track={track} parsedData={parsedData} />}
       </div>
     </div>
   )
