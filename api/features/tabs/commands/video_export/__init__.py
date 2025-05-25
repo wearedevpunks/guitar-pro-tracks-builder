@@ -340,7 +340,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
             video_clip = VideoFileClip(video_path)
             audio_clip = AudioFileClip(audio_path)
             
-            final_clip = video_clip.set_audio(audio_clip)
+            final_clip = video_clip.with_audio(audio_clip)
             final_clip.write_videofile(temp_final.name, codec='libx264', audio_codec='aac')
             
             video_clip.close()
