@@ -290,6 +290,14 @@
             "description": "Total number of measures",
             "default": 0
           },
+          "measures": {
+            "items": {
+              "$ref": "#/components/schemas/SerializableMeasureInfo"
+            },
+            "type": "array",
+            "title": "Measures",
+            "description": "Song-level measure information with section names"
+          },
           "has_lyrics": {
             "type": "boolean",
             "title": "Has Lyrics",
@@ -313,6 +321,24 @@
         "example": {
           "has_lyrics": false,
           "measure_count": 32,
+          "measures": [
+            {
+              "number": 1,
+              "section_name": "Intro"
+            },
+            {
+              "number": 5,
+              "section_name": "Verse 1"
+            },
+            {
+              "number": 13,
+              "section_name": "Chorus"
+            },
+            {
+              "number": 21,
+              "section_name": "Verse 2"
+            }
+          ],
           "song_info": {
             "album": "Master of Puppets",
             "artist": "Metallica",
@@ -383,6 +409,12 @@
             "description": "Beat duration",
             "default": "quarter"
           },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Beat text or chord annotation",
+            "default": ""
+          },
           "fade_in": {
             "type": "boolean",
             "title": "Fade In",
@@ -428,6 +460,7 @@
           "fade_in": false,
           "fade_out": false,
           "start_time": 0,
+          "text": "",
           "tremolo_picking": false,
           "voices": [
             {
@@ -613,6 +646,31 @@
             "denominator": 4,
             "numerator": 4
           }
+        }
+      },
+      "SerializableMeasureInfo": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number",
+            "description": "Measure number (1-based)"
+          },
+          "section_name": {
+            "type": "string",
+            "title": "Section Name",
+            "description": "Section name from first track beat text",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "number"
+        ],
+        "title": "SerializableMeasureInfo",
+        "description": "Song-level measure information with section names.",
+        "example": {
+          "number": 1,
+          "section_name": "Intro"
         }
       },
       "SerializableNote": {

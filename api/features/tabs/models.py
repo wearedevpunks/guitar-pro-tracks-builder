@@ -155,6 +155,9 @@ class SerializableBeat(BaseModel):
     start_time: int = Field(0, description="Start time in ticks")
     duration: str = Field("quarter", description="Beat duration")
     
+    # Beat text/annotations
+    text: str = Field("", description="Beat text or chord annotation")
+    
     # Beat effects
     fade_in: bool = Field(False, description="Has fade in")
     fade_out: bool = Field(False, description="Has fade out")
@@ -176,6 +179,7 @@ class SerializableBeat(BaseModel):
                 ],
                 "start_time": 0,
                 "duration": "quarter",
+                "text": "",
                 "fade_in": False,
                 "fade_out": False,
                 "volume_swell": False,
@@ -372,12 +376,28 @@ class SerializableSongInfo(BaseModel):
         }
 
 
+class SerializableMeasureInfo(BaseModel):
+    """Song-level measure information with section names."""
+    
+    number: int = Field(..., description="Measure number (1-based)")
+    section_name: str = Field("", description="Section name from first track beat text")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "number": 1,
+                "section_name": "Intro"
+            }
+        }
+
+
 class ParsedTabData(BaseModel):
     """Complete parsed tab data ready for frontend editing."""
     
     song_info: SerializableSongInfo = Field(..., description="Song metadata")
     tracks: List[SerializableTrack] = Field(..., description="List of tracks")
     measure_count: int = Field(0, description="Total number of measures")
+    measures: List[SerializableMeasureInfo] = Field(default_factory=list, description="Song-level measure information with section names")
     
     # Additional useful info
     has_lyrics: bool = Field(False, description="Song contains lyrics")
@@ -404,6 +424,12 @@ class ParsedTabData(BaseModel):
                     }
                 ],
                 "measure_count": 32,
+                "measures": [
+                    {"number": 1, "section_name": "Intro"},
+                    {"number": 5, "section_name": "Verse 1"},
+                    {"number": 13, "section_name": "Chorus"},
+                    {"number": 21, "section_name": "Verse 2"}
+                ],
                 "has_lyrics": False,
                 "version": "5.2"
             }

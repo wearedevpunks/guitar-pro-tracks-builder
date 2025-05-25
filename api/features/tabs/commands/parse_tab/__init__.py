@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from pydantic import BaseModel, Field
 import io
 import guitarpro
@@ -139,10 +139,14 @@ class ParseTabHandlerImpl(ParseTabHandler):
         version = getattr(song, 'versionTuple', (5, 2, 0))
         version_str = f"{version[0]}.{version[1]}" if version else "Unknown"
 
+        # Extract song-level measures with section names from first track
+        measures = self._extract_song_measures(song, tracks)
+
         return ParsedTabData(
             song_info=song_info,
             tracks=tracks,
             measure_count=measure_count,
+            measures=measures,
             has_lyrics=has_lyrics,
             version=version_str
         )
@@ -373,10 +377,14 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 # Convert stroke direction enum to string
                 stroke_direction = str(direction).lower() if hasattr(direction, 'name') else str(direction).lower()
         
+        # Extract beat text (could be from text, chord, or other annotations)
+        beat_text = self._get_beat_text(beat, effect)
+        
         return SerializableBeat(
             voices=[serializable_voice],
             start_time=getattr(beat, 'start', 0),
             duration=self._get_duration_string(beat),
+            text=beat_text,
             fade_in=getattr(effect, 'fadeIn', False) if effect else False,
             fade_out=getattr(effect, 'fadeOut', False) if effect else False,
             volume_swell=getattr(effect, 'volumeSwell', False) if effect else False,
@@ -610,3 +618,97 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 }
         
         return None
+    
+    def _get_beat_text(self, beat, effect=None) -> str:
+        """Extract text information from beat."""
+        text_parts = []
+        
+        # Check for direct text attribute
+        if hasattr(beat, 'text') and beat.text:
+            text_parts.append(str(beat.text))
+        
+        # Check for chord information in effect
+        if effect and hasattr(effect, 'chord'):
+            chord = getattr(effect, 'chord', None)
+            if chord:
+                chord_name = getattr(chord, 'name', None) or getattr(chord, 'root', None)
+                if chord_name:
+                    text_parts.append(str(chord_name))
+        
+        # Check for chord directly on beat
+        if hasattr(beat, 'chord'):
+            chord = getattr(beat, 'chord', None)
+            if chord:
+                chord_name = getattr(chord, 'name', None) or getattr(chord, 'root', None)
+                if chord_name:
+                    text_parts.append(str(chord_name))
+        
+        # Check for any annotation or text properties
+        for attr_name in ['annotation', 'textMarker', 'displayText']:
+            if hasattr(beat, attr_name):
+                attr_value = getattr(beat, attr_name, None)
+                if attr_value:
+                    text_parts.append(str(attr_value))
+        
+        return ' '.join(text_parts) if text_parts else ''
+    
+    def _extract_song_measures(self, song, tracks) -> List:
+        """Extract song-level measures with section names from first track beat text."""
+        from ...models import SerializableMeasureInfo
+        
+        measures = []
+        
+        # Get measure count
+        measure_count = len(getattr(song, 'measureHeaders', []))
+        
+        # If no tracks, just create basic measures without section names
+        if not tracks:
+            for i in range(measure_count):
+                measures.append(SerializableMeasureInfo(
+                    number=i + 1,
+                    section_name=""
+                ))
+            return measures
+        
+        # Use first track to extract section names from beat text
+        first_track = song.tracks[0] if song.tracks else None
+        if not first_track:
+            # Fallback: create measures without section names
+            for i in range(measure_count):
+                measures.append(SerializableMeasureInfo(
+                    number=i + 1,
+                    section_name=""
+                ))
+            return measures
+        
+        # Extract section names from first track measures
+        track_measures = getattr(first_track, 'measures', [])
+        
+        for measure_idx in range(measure_count):
+            measure_number = measure_idx + 1
+            section_name = ""
+            
+            # Get the corresponding measure from first track
+            if measure_idx < len(track_measures):
+                measure = track_measures[measure_idx]
+                voices = getattr(measure, 'voices', [])
+                
+                # Look for text in the first voice's first beat
+                for voice in voices:
+                    voice_beats = getattr(voice, 'beats', [])
+                    if voice_beats:
+                        first_beat = voice_beats[0]
+                        # Extract text from this beat
+                        beat_text = self._get_beat_text(first_beat, getattr(first_beat, 'effect', None))
+                        if beat_text.strip():
+                            section_name = beat_text.strip()
+                            break
+                    if section_name:
+                        break
+            
+            measures.append(SerializableMeasureInfo(
+                number=measure_number,
+                section_name=section_name
+            ))
+        
+        return measures
