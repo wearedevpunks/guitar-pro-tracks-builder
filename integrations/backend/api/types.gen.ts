@@ -605,6 +605,14 @@ export type VideoExportRequest = {
      * Override duration per measure in seconds
      */
     duration_per_measure?: number | null;
+    /**
+     * Number of count-in measures before the song starts
+     */
+    count_in_measures?: number;
+    /**
+     * Use random background colors that change every measure
+     */
+    use_dynamic_colors?: boolean;
 };
 
 /**

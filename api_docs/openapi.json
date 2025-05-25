@@ -1702,6 +1702,12 @@
             "title": "Count In Measures",
             "description": "Number of count-in measures before the song starts",
             "default": 0
+          },
+          "use_dynamic_colors": {
+            "type": "boolean",
+            "title": "Use Dynamic Colors",
+            "description": "Use random background colors that change every measure",
+            "default": false
           }
         },
         "type": "object",
@@ -1718,7 +1724,8 @@
             1920,
             1080
           ],
-          "song_id": "123e4567-e89b-12d3-a456-426614174000"
+          "song_id": "123e4567-e89b-12d3-a456-426614174000",
+          "use_dynamic_colors": false
         }
       },
       "VideoExportResponse": {

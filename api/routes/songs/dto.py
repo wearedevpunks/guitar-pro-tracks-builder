@@ -82,6 +82,7 @@ class VideoExportRequest(BaseModel):
     fps: int = Field(30, description="Frames per second", ge=15, le=60)
     duration_per_measure: Optional[float] = Field(None, description="Override duration per measure in seconds", gt=0)
     count_in_measures: int = Field(0, description="Number of count-in measures before the song starts", ge=0, le=8)
+    use_dynamic_colors: bool = Field(False, description="Use random background colors that change every measure")
     
     class Config:
         json_schema_extra = {
@@ -91,7 +92,8 @@ class VideoExportRequest(BaseModel):
                 "resolution": [1920, 1080],
                 "fps": 30,
                 "duration_per_measure": None,
-                "count_in_measures": 2
+                "count_in_measures": 2,
+                "use_dynamic_colors": False
             }
         }
 

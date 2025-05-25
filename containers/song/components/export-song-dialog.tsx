@@ -6,6 +6,8 @@ interface ExportSongDialogProps {
   isExporting: boolean
   countInMeasures: number
   onCountInMeasuresChange: (value: number) => void
+  useDynamicColors: boolean
+  onUseDynamicColorsChange: (value: boolean) => void
   onClose: () => void
   onConfirm: () => void
   error?: Error | null
@@ -17,6 +19,8 @@ export function ExportSongDialog({
   isExporting,
   countInMeasures,
   onCountInMeasuresChange,
+  useDynamicColors,
+  onUseDynamicColorsChange,
   onClose,
   onConfirm,
   error,
@@ -66,23 +70,45 @@ export function ExportSongDialog({
             </div>
 
             {/* Export Settings */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Count-in Measures
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  min="0"
-                  max="8"
-                  value={countInMeasures}
-                  onChange={(e) => onCountInMeasuresChange(parseInt(e.target.value) || 0)}
-                  disabled={isExporting}
-                  className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                />
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  measures of metronome before the song starts
-                </span>
+            <div className="mb-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Count-in Measures
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="0"
+                    max="8"
+                    value={countInMeasures}
+                    onChange={(e) => onCountInMeasuresChange(parseInt(e.target.value) || 0)}
+                    disabled={isExporting}
+                    className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    measures of metronome before the song starts
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={useDynamicColors}
+                    onChange={(e) => onUseDynamicColorsChange(e.target.checked)}
+                    disabled={isExporting}
+                    className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Dynamic Colors
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Use random background colors that change every measure
+                    </p>
+                  </div>
+                </label>
               </div>
             </div>
 

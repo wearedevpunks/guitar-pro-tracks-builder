@@ -67,7 +67,8 @@ async def export_song_video_action(
             "resolution": request.resolution,
             "fps": request.fps,
             "count_in_measures": request.count_in_measures,
-            "filename": filename
+            "filename": filename,
+            "use_dynamic_colors": request.use_dynamic_colors
         }
         
         if request.duration_per_measure:
@@ -96,7 +97,8 @@ async def export_song_video_action(
             "format": request.output_format,
             "song_title": parse_result.parsed_data.song_info.title,
             "total_measures": parse_result.parsed_data.measure_count,
-            "count_in_measures": request.count_in_measures
+            "count_in_measures": request.count_in_measures,
+            "use_dynamic_colors": request.use_dynamic_colors
         }
         
         if request.duration_per_measure:

@@ -8,6 +8,8 @@ import numpy as np
 from moviepy import VideoFileClip, AudioFileClip
 import soundfile as sf
 from datetime import datetime
+import random
+import colorsys
 
 from api.abstractions.storage import FileReference
 from api.services.storage import FileStorageService
@@ -26,6 +28,7 @@ class VideoExportCommand(BaseModel):
     duration_per_measure: Optional[float] = Field(None, description="Override duration per measure in seconds")
     count_in_measures: int = Field(0, description="Number of count-in measures before the song starts")
     filename: Optional[str] = Field(None, description="Original filename of the tab file")
+    use_dynamic_colors: bool = Field(False, description="Use random background colors that change every measure")
 
 
 class VideoExportResult(BaseModel):
@@ -289,6 +292,60 @@ class VideoExportHandlerImpl(VideoExportHandler):
         # Default if past all measures
         return len(parsed_data.measures), 1, 1, 60.0 / current_tempo * 4
     
+    def _get_background_color_for_measure(self, measure_number: int, use_dynamic_colors: bool) -> tuple:
+        """Generate a background color for a specific measure."""
+        if not use_dynamic_colors:
+            return (0, 0, 0)  # Black
+        
+        # Use measure number as seed for consistent colors per measure
+        random.seed(abs(measure_number) * 42)  # Multiply by 42 for better distribution
+        
+        # Generate vibrant but not too bright colors using HSV
+        hue = random.random()  # Random hue
+        saturation = random.uniform(0.4, 0.8)  # Medium to high saturation
+        value = random.uniform(0.2, 0.5)  # Darker values to ensure text visibility
+        
+        # Convert HSV to RGB
+        rgb = colorsys.hsv_to_rgb(hue, saturation, value)
+        
+        # Convert to BGR for OpenCV (and scale to 0-255)
+        bgr = (int(rgb[2] * 255), int(rgb[1] * 255), int(rgb[0] * 255))
+        return bgr
+    
+    def _get_text_colors_for_background(self, background_color: tuple) -> dict:
+        """Get optimal text colors based on background color."""
+        # Calculate luminance of background
+        b, g, r = background_color
+        luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        
+        # Define colors based on background luminance
+        if luminance > 0.5:  # Light background
+            return {
+                'primary': (0, 0, 0),      # Black
+                'secondary': (50, 50, 50),  # Dark gray
+                'accent1': (200, 0, 0),     # Dark red
+                'accent2': (0, 150, 200),   # Dark cyan
+                'count_in': (150, 100, 0),  # Dark orange
+                'metronome': (0, 0, 0),     # Black
+                'beat_active': (0, 100, 0), # Dark green
+                'beat_inactive': (100, 100, 100),  # Gray
+                'beat_one_active': (150, 0, 0),    # Dark red
+                'beat_one_inactive': (100, 50, 50) # Dark red gray
+            }
+        else:  # Dark background
+            return {
+                'primary': (255, 255, 255),    # White
+                'secondary': (200, 200, 200),  # Light gray
+                'accent1': (255, 100, 100),    # Light red
+                'accent2': (100, 255, 255),    # Light cyan
+                'count_in': (255, 165, 0),     # Orange
+                'metronome': (255, 255, 255),  # White
+                'beat_active': (0, 255, 0),    # Green
+                'beat_inactive': (50, 50, 50), # Dark gray
+                'beat_one_active': (0, 0, 255),     # Blue
+                'beat_one_inactive': (50, 0, 0)     # Dark red
+            }
+    
     def _create_frame(
         self,
         parsed_data: ParsedTabData,
@@ -300,19 +357,19 @@ class VideoExportHandlerImpl(VideoExportHandler):
     ) -> np.ndarray:
         """Create a single video frame with dynamic tempo and time signature."""
         
-        # Create black background
-        frame = np.zeros((height, width, 3), dtype=np.uint8)
-        
         # Get dynamic tempo and time signature for current time
         tempo_bpm, time_signature_num = self._get_tempo_and_time_sig_at_time(parsed_data, current_time, count_in_measures)
         current_measure, current_beat, current_quarter, seconds_per_measure = self._get_current_measure_and_position(parsed_data, current_time, count_in_measures)
         
-        # Define colors
-        white = (255, 255, 255)
-        green = (0, 255, 0)
-        red = (0, 0, 255)
-        yellow = (0, 255, 255)
-        orange = (0, 165, 255)  # For count-in
+        # Determine background color based on current measure
+        use_dynamic_colors = command.use_dynamic_colors if command else False
+        background_color = self._get_background_color_for_measure(current_measure, use_dynamic_colors)
+        
+        # Create background with determined color
+        frame = np.full((height, width, 3), background_color, dtype=np.uint8)
+        
+        # Get text colors optimized for current background
+        colors = self._get_text_colors_for_background(background_color)
         
         # Font settings
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -324,12 +381,12 @@ class VideoExportHandlerImpl(VideoExportHandler):
         else:
             title = parsed_data.song_info.title or "Metronome"
         cv2.putText(frame, title, (width//2 - len(title)*20, 80), 
-                   font, 2, white, 3, cv2.LINE_AA)
+                   font, 2, colors['primary'], 3, cv2.LINE_AA)
         
         # Tempo
         tempo_text = f"Tempo: {tempo_bpm} BPM"
         cv2.putText(frame, tempo_text, (50, height - 50), 
-                   font, 1, white, 2, cv2.LINE_AA)
+                   font, 1, colors['secondary'], 2, cv2.LINE_AA)
         
         # Check if we're in count-in phase
         if current_measure < 0:
@@ -342,12 +399,12 @@ class VideoExportHandlerImpl(VideoExportHandler):
             else:
                 measure_text = f"Count-in {count_in_number}"
             cv2.putText(frame, measure_text, (width//2 - 180, height//2 - 140), 
-                       font, 3, orange, 4, cv2.LINE_AA)
+                       font, 3, colors['count_in'], 4, cv2.LINE_AA)
             
             # Current section (disabled during count-in)
             section_text = "Ready to start..."
             cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 60), 
-                       font, 2, orange, 3, cv2.LINE_AA)
+                       font, 2, colors['count_in'], 3, cv2.LINE_AA)
         else:
             # Regular song measures
             # Get current section name
@@ -356,23 +413,23 @@ class VideoExportHandlerImpl(VideoExportHandler):
             # Current measure (large, centered)
             measure_text = f"Measure {current_measure}"
             cv2.putText(frame, measure_text, (width//2 - 150, height//2 - 140), 
-                       font, 3, green, 4, cv2.LINE_AA)
+                       font, 3, colors['accent1'], 4, cv2.LINE_AA)
             
             # Current section
             section_text = f"Section: {current_section}"
             cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 60), 
-                       font, 2, yellow, 3, cv2.LINE_AA)
+                       font, 2, colors['accent2'], 3, cv2.LINE_AA)
         
         # Beat counter
         beat_text = f"Beat: {current_beat}/{time_signature_num}"
         cv2.putText(frame, beat_text, (width//2 - 100, height//2 + 40), 
-                   font, 2, white, 3, cv2.LINE_AA)
+                   font, 2, colors['primary'], 3, cv2.LINE_AA)
         
         # Visual metronome
-        self._draw_metronome(frame, width, height, current_time, tempo_bpm, time_signature_num)
+        self._draw_metronome(frame, width, height, current_time, tempo_bpm, time_signature_num, colors)
         
         # Beat indicators
-        self._draw_beat_indicators(frame, width, height, current_beat, time_signature_num)
+        self._draw_beat_indicators(frame, width, height, current_beat, time_signature_num, colors)
         
         return frame
     
@@ -385,7 +442,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
         return current_section or "Main"
     
     def _draw_metronome(self, frame: np.ndarray, width: int, height: int, 
-                       current_time: float, tempo_bpm: int, time_signature_num: int):
+                       current_time: float, tempo_bpm: int, time_signature_num: int, colors: dict):
         """Draw visual metronome pendulum."""
         
         seconds_per_beat = 60.0 / tempo_bpm
@@ -403,13 +460,14 @@ class VideoExportHandlerImpl(VideoExportHandler):
         end_x = int(center_x + pendulum_length * np.sin(angle))
         end_y = int(center_y - pendulum_length * np.cos(angle))
         
-        # Draw pendulum
-        cv2.line(frame, (center_x, center_y), (end_x, end_y), (255, 255, 255), 5)
-        cv2.circle(frame, (end_x, end_y), 20, (255, 255, 255), -1)
-        cv2.circle(frame, (center_x, center_y), 10, (255, 255, 255), -1)
+        # Draw pendulum using dynamic colors
+        metronome_color = colors['metronome']
+        cv2.line(frame, (center_x, center_y), (end_x, end_y), metronome_color, 5)
+        cv2.circle(frame, (end_x, end_y), 20, metronome_color, -1)
+        cv2.circle(frame, (center_x, center_y), 10, metronome_color, -1)
     
     def _draw_beat_indicators(self, frame: np.ndarray, width: int, height: int, 
-                            current_beat: int, time_signature_num: int):
+                            current_beat: int, time_signature_num: int, colors: dict):
         """Draw beat indicator lights."""
         
         indicator_y = height - 150
@@ -418,13 +476,16 @@ class VideoExportHandlerImpl(VideoExportHandler):
         
         for beat_num in range(1, time_signature_num + 1):
             x = start_x + (beat_num - 1) * indicator_spacing
-            color = (0, 255, 0) if beat_num == current_beat else (50, 50, 50)
-            if beat_num == 1:  # Emphasize beat 1
-                color = (0, 0, 255) if beat_num == current_beat else (50, 0, 0)
+            
+            # Choose color based on beat number and active state
+            if beat_num == 1:  # Beat 1 special colors
+                color = colors['beat_one_active'] if beat_num == current_beat else colors['beat_one_inactive']
+            else:  # Other beats
+                color = colors['beat_active'] if beat_num == current_beat else colors['beat_inactive']
             
             cv2.circle(frame, (x, indicator_y), 25, color, -1)
             cv2.putText(frame, str(beat_num), (x-8, indicator_y+8), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, colors['primary'], 2)
     
     async def _generate_metronome_audio(self, parsed_data: ParsedTabData, duration: float, count_in_measures: int = 0) -> str:
         """Generate metronome audio with dynamic tempo changes and emphasis on beat 1."""

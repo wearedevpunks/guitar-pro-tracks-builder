@@ -11,6 +11,7 @@ interface SongDetailsProps {
 export function SongDetails({ song, onEditSong }: SongDetailsProps) {
   const [showExportDialog, setShowExportDialog] = useState(false)
   const [countInMeasures, setCountInMeasures] = useState(2)
+  const [useDynamicColors, setUseDynamicColors] = useState(true)
 
   const exportVideoMutation = useMutation({
     mutationFn: async () => {
@@ -34,6 +35,7 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
             resolution: [1920, 1080],
             fps: 30,
             count_in_measures: countInMeasures,
+            use_dynamic_colors: useDynamicColors,
           },
           // Pass the abort signal to the fetch request
           signal: controller.signal,
@@ -176,6 +178,8 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
         isExporting={exportVideoMutation.isPending}
         countInMeasures={countInMeasures}
         onCountInMeasuresChange={setCountInMeasures}
+        useDynamicColors={useDynamicColors}
+        onUseDynamicColorsChange={setUseDynamicColors}
         onClose={() => setShowExportDialog(false)}
         onConfirm={handleExportSong}
         error={exportVideoMutation.error}
