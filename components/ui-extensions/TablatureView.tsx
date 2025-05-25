@@ -35,12 +35,14 @@ export function TablatureView({
   stringMidiValues,
   tabLines,
   tempo,
-  timeSignature
+  timeSignature,
 }: TablatureViewProps) {
-  const [viewMode, setViewMode] = useState<'horizontal' | 'wrapped'>('horizontal')
+  const [viewMode, setViewMode] = useState<"horizontal" | "wrapped">(
+    "horizontal"
+  )
   const [measuresPerRow, setMeasuresPerRow] = useState(4)
 
-  const stringNames = stringMidiValues.map(midi => midiToNoteName(midi))
+  const stringNames = stringMidiValues.map((midi) => midiToNoteName(midi))
   const stringCount = stringMidiValues.length
 
   // Calculate positions for wrapping
@@ -53,7 +55,13 @@ export function TablatureView({
     })
   }
 
-  const renderTabNote = (note: TabNote, index: string, stringIndex?: number, noteIndex?: number, allNotes?: TabNote[][]) => {
+  const renderTabNote = (
+    note: TabNote,
+    index: string,
+    stringIndex?: number,
+    noteIndex?: number,
+    allNotes?: TabNote[][]
+  ) => {
     if (note.isMeasureSeparator) {
       return (
         <div key={index} className="flex items-center px-1">
@@ -63,74 +71,89 @@ export function TablatureView({
     }
 
     const isPlayed = note.fret !== "-" && note.fret !== ""
-    
+
     // Determine note color based on properties
     const getNoteColor = () => {
-      if (note.muted) return 'bg-gray-500'
-      if (note.ghost) return 'bg-gray-400 opacity-60'
-      if (note.harmonic) return 'bg-yellow-500'
-      if (note.palm_mute) return 'bg-orange-500'
-      if (note.let_ring) return 'bg-green-500'
-      if (note.tied) return 'bg-purple-500'
-      if (note.tuplet) return 'bg-cyan-500'
-      return 'bg-blue-500'
+      if (note.muted) return "bg-gray-500"
+      if (note.ghost) return "bg-gray-400 opacity-60"
+      if (note.harmonic) return "bg-yellow-500"
+      if (note.palm_mute) return "bg-orange-500"
+      if (note.let_ring) return "bg-green-500"
+      if (note.tied) return "bg-purple-500"
+      if (note.tuplet) return "bg-cyan-500"
+      return "bg-blue-500"
     }
-    
+
     // Build technique display
     const getTechniques = () => {
       const techniques: string[] = []
-      if (note.palm_mute) techniques.push('P.M.')
-      if (note.harmonic) techniques.push('H')
-      if (note.staccato) techniques.push('.')
-      if (note.let_ring) techniques.push('L.R.')
-      if (note.vibrato) techniques.push('~')
+      if (note.palm_mute) techniques.push("P.M.")
+      if (note.harmonic) techniques.push("H")
+      if (note.staccato) techniques.push(".")
+      if (note.let_ring) techniques.push("L.R.")
+      if (note.vibrato) techniques.push("~")
       if (note.bend_value) techniques.push(`B${note.bend_value}`)
-      if (note.slide_type) techniques.push('S')
+      if (note.slide_type) techniques.push("S")
       if (note.technique) techniques.push(note.technique)
-      return techniques.join(' ')
+      return techniques.join(" ")
     }
 
     // Check if this note is part of a tuplet and should show tuplet bracket
     const shouldShowTupletBracket = () => {
-      if (!note.tuplet || stringIndex === undefined || noteIndex === undefined || !allNotes) return false
-      
+      if (
+        !note.tuplet ||
+        stringIndex === undefined ||
+        noteIndex === undefined ||
+        !allNotes
+      )
+        return false
+
       // Show bracket only on the first string for this beat position
       if (stringIndex !== 0) return false
-      
+
       // Find if this is the start of a tuplet group
       const tupletStart = noteIndex
       let tupletCount = 0
-      
+
       // Count consecutive notes with the same tuplet
-      for (let i = tupletStart; i < allNotes[0].length && tupletCount < note.tuplet.enters; i++) {
+      for (
+        let i = tupletStart;
+        i < allNotes[0].length && tupletCount < note.tuplet.enters;
+        i++
+      ) {
         const currentNote = allNotes[0][i]
-        if (currentNote?.tuplet?.enters === note.tuplet.enters && 
-            currentNote?.tuplet?.times === note.tuplet.times && 
-            !currentNote.isMeasureSeparator) {
+        if (
+          currentNote?.tuplet?.enters === note.tuplet.enters &&
+          currentNote?.tuplet?.times === note.tuplet.times &&
+          !currentNote.isMeasureSeparator
+        ) {
           tupletCount++
         } else {
           break
         }
       }
-      
+
       return tupletCount === note.tuplet.enters
     }
-    
+
     return (
-      <div key={index} className="relative flex items-center justify-center min-w-[32px] h-12">
+      <div
+        key={index}
+        className="relative flex items-center justify-center min-w-[32px] h-12"
+      >
         {/* String line */}
         <div className="absolute w-full h-px bg-gray-300 dark:bg-gray-600 top-1/2 transform -translate-y-1/2 z-0"></div>
-        
+
         {/* Tuplet bracket (only shown on first string) */}
         {shouldShowTupletBracket() && note.tuplet && (
           <div className="absolute -top-8 left-0 right-0 z-30">
             <div className="flex items-center justify-center">
               {/* Tuplet bracket */}
-              <div 
+              <div
                 className="relative border-t border-l border-r border-red-500"
-                style={{ 
+                style={{
                   width: `${note.tuplet.enters * 32}px`,
-                  height: '8px'
+                  height: "8px",
                 }}
               >
                 {/* Tuplet number */}
@@ -141,45 +164,49 @@ export function TablatureView({
             </div>
           </div>
         )}
-        
+
         {/* Note or empty space */}
         {isPlayed ? (
           <div className="relative z-10 group">
             {/* Fret number */}
-            <div className={`
+            <div
+              className={`
               ${getNoteColor()} text-white text-xs font-mono rounded-full w-6 h-6 
               flex items-center justify-center relative z-20 transition-all
-              ${note.accent ? 'ring-2 ring-red-400' : ''}
-              ${note.heavy_accent ? 'ring-2 ring-red-600 ring-offset-1' : ''}
-              ${note.ghost ? 'opacity-60' : ''}
-            `}>
+              ${note.accent ? "ring-2 ring-red-400" : ""}
+              ${note.heavy_accent ? "ring-2 ring-red-600 ring-offset-1" : ""}
+              ${note.ghost ? "opacity-60" : ""}
+            `}
+            >
               {note.fret}
             </div>
-            
+
             {/* Technique markers */}
             {getTechniques() && (
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs font-mono text-purple-600 dark:text-purple-400 whitespace-nowrap bg-white dark:bg-gray-800 px-1 rounded">
                 {getTechniques()}
               </div>
             )}
-            
+
             {/* Duration marker */}
             {note.duration && (
-              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
-                {getDurationSymbol(note.duration)}
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
+                <NoteDurationSVG duration={note.duration} />
               </div>
             )}
-            
+
             {/* Velocity indicator */}
             {note.velocity && note.velocity !== 79 && (
               <div className="absolute -right-2 -top-1 text-xs text-gray-400 font-mono">
                 {note.velocity}
               </div>
             )}
-            
+
             {/* Special effects indicators */}
             {note.tied && (
-              <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 text-purple-600">⌐</div>
+              <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 text-purple-600">
+                ⌐
+              </div>
             )}
           </div>
         ) : (
@@ -195,15 +222,19 @@ export function TablatureView({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setViewMode(viewMode === 'horizontal' ? 'wrapped' : 'horizontal')}
+            onClick={() =>
+              setViewMode(viewMode === "horizontal" ? "wrapped" : "horizontal")
+            }
             className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
           >
-            {viewMode === 'horizontal' ? 'Wrap Rows' : 'Horizontal'}
+            {viewMode === "horizontal" ? "Wrap Rows" : "Horizontal"}
           </button>
-          
-          {viewMode === 'wrapped' && (
+
+          {viewMode === "wrapped" && (
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-600 dark:text-gray-400">Measures per row:</label>
+              <label className="text-xs text-gray-600 dark:text-gray-400">
+                Measures per row:
+              </label>
               <select
                 value={measuresPerRow}
                 onChange={(e) => setMeasuresPerRow(Number(e.target.value))}
@@ -217,19 +248,25 @@ export function TablatureView({
             </div>
           )}
         </div>
-        
+
         {/* Tempo and Time Signature */}
         <div className="flex items-center gap-4 text-sm">
           {tempo && (
             <div className="flex items-center gap-1">
               <span className="text-gray-600 dark:text-gray-400">♩ =</span>
-              <span className="font-mono text-gray-900 dark:text-white">{tempo}</span>
+              <span className="font-mono text-gray-900 dark:text-white">
+                {tempo}
+              </span>
             </div>
           )}
           {timeSignature && (
             <div className="flex flex-col items-center leading-none">
-              <span className="text-xs font-mono text-gray-900 dark:text-white">{timeSignature.split('/')[0]}</span>
-              <span className="text-xs font-mono text-gray-900 dark:text-white">{timeSignature.split('/')[1]}</span>
+              <span className="text-xs font-mono text-gray-900 dark:text-white">
+                {timeSignature.split("/")[0]}
+              </span>
+              <span className="text-xs font-mono text-gray-900 dark:text-white">
+                {timeSignature.split("/")[1]}
+              </span>
             </div>
           )}
         </div>
@@ -237,25 +274,34 @@ export function TablatureView({
 
       {/* Tablature */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 overflow-x-auto">
-        {viewMode === 'horizontal' ? (
+        {viewMode === "horizontal" ? (
           <div className="min-w-max">
             {/* String lines */}
             {Array.from({ length: stringCount }).map((_, stringIndex) => (
-              <div key={stringIndex} className="flex items-center mb-4 last:mb-0">
+              <div
+                key={stringIndex}
+                className="flex items-center mb-4 last:mb-0"
+              >
                 {/* String label */}
                 <div className="w-8 text-right mr-4 text-sm font-mono text-gray-600 dark:text-gray-400 flex-shrink-0">
                   {stringNames[stringIndex]}
                 </div>
-                
+
                 {/* Tab notes */}
                 <div className="flex items-center">
-                  {tabLines[stringIndex]?.map((note, noteIndex) => 
-                    renderTabNote(note, `horizontal-${stringIndex}-${noteIndex}`, stringIndex, noteIndex, tabLines)
+                  {tabLines[stringIndex]?.map((note, noteIndex) =>
+                    renderTabNote(
+                      note,
+                      `horizontal-${stringIndex}-${noteIndex}`,
+                      stringIndex,
+                      noteIndex,
+                      tabLines
+                    )
                   )}
                 </div>
               </div>
             ))}
-            
+
             {/* Measure numbers */}
             <div className="flex mt-4">
               <div className="w-8 mr-4 flex-shrink-0"></div>
@@ -263,9 +309,16 @@ export function TablatureView({
                 {measurePositions.map((position, measureIndex) => (
                   <div
                     key={measureIndex}
-                    style={{ 
-                      marginLeft: measureIndex === 0 ? '0' : 
-                        `${(position - (measurePositions[measureIndex - 1] || 0)) * 32 - 32}px` 
+                    style={{
+                      marginLeft:
+                        measureIndex === 0
+                          ? "0"
+                          : `${
+                              (position -
+                                (measurePositions[measureIndex - 1] || 0)) *
+                                32 -
+                              32
+                            }px`,
                     }}
                     className="text-xs text-gray-500 dark:text-gray-400 text-center min-w-[32px]"
                   >
@@ -284,13 +337,15 @@ export function TablatureView({
 
   const renderWrappedView = () => {
     const rows: TabNote[][][] = []
-    let currentRow: TabNote[][] = Array(stringCount).fill(0).map(() => [])
+    let currentRow: TabNote[][] = Array(stringCount)
+      .fill(0)
+      .map(() => [])
     let notesInCurrentRow = 0
     let measuresInCurrentRow = 0
 
     // Split tab lines into rows
-    const maxNotes = Math.max(...tabLines.map(line => line.length))
-    
+    const maxNotes = Math.max(...tabLines.map((line) => line.length))
+
     for (let noteIndex = 0; noteIndex < maxNotes; noteIndex++) {
       for (let stringIndex = 0; stringIndex < stringCount; stringIndex++) {
         const note = tabLines[stringIndex][noteIndex]
@@ -298,23 +353,25 @@ export function TablatureView({
           currentRow[stringIndex].push(note)
         }
       }
-      
+
       notesInCurrentRow++
-      
+
       // Check if this is a measure separator
       const isMeasureSeparator = tabLines[0][noteIndex]?.isMeasureSeparator
       if (isMeasureSeparator) {
         measuresInCurrentRow++
-        
+
         if (measuresInCurrentRow >= measuresPerRow) {
           rows.push(currentRow)
-          currentRow = Array(stringCount).fill(0).map(() => [])
+          currentRow = Array(stringCount)
+            .fill(0)
+            .map(() => [])
           notesInCurrentRow = 0
           measuresInCurrentRow = 0
         }
       }
     }
-    
+
     // Add remaining notes to last row
     if (notesInCurrentRow > 0) {
       rows.push(currentRow)
@@ -328,32 +385,41 @@ export function TablatureView({
             {rowIndex > 0 && (
               <div className="absolute -top-6 left-0 right-0 border-t border-gray-300 dark:border-gray-600"></div>
             )}
-            
+
             {/* Row number indicator */}
             <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 text-xs font-mono text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 px-1">
               {rowIndex + 1}
             </div>
-            
+
             {/* Tablature content */}
             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <div className="min-w-max">
                 {/* String lines for this row */}
                 {Array.from({ length: stringCount }).map((_, stringIndex) => (
-                  <div key={stringIndex} className="flex items-center mb-4 last:mb-0">
+                  <div
+                    key={stringIndex}
+                    className="flex items-center mb-4 last:mb-0"
+                  >
                     {/* String label */}
                     <div className="w-8 text-right mr-4 text-sm font-mono text-gray-600 dark:text-gray-400 flex-shrink-0 font-medium">
                       {stringNames[stringIndex]}
                     </div>
-                    
+
                     {/* Tab notes for this row */}
                     <div className="flex items-center">
-                      {row[stringIndex]?.map((note, noteIndex) => 
-                        renderTabNote(note, `${rowIndex}-${stringIndex}-${noteIndex}`, stringIndex, noteIndex, row)
+                      {row[stringIndex]?.map((note, noteIndex) =>
+                        renderTabNote(
+                          note,
+                          `${rowIndex}-${stringIndex}-${noteIndex}`,
+                          stringIndex,
+                          noteIndex,
+                          row
+                        )
                       )}
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Measure numbers for this row */}
                 <div className="flex mt-4 pt-2 border-t border-gray-200 dark:border-gray-600">
                   <div className="w-8 mr-4 flex-shrink-0"></div>
@@ -362,16 +428,21 @@ export function TablatureView({
                     {(() => {
                       const measuresInThisRow: number[] = []
                       let measureCount = 0
-                      
+
                       row[0]?.forEach((note) => {
                         if (note.isMeasureSeparator) {
                           measureCount++
-                          measuresInThisRow.push(rowIndex * measuresPerRow + measureCount)
+                          measuresInThisRow.push(
+                            rowIndex * measuresPerRow + measureCount
+                          )
                         }
                       })
-                      
+
                       return measuresInThisRow.map((measureNum, index) => (
-                        <div key={index} className="text-xs font-mono text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded border">
+                        <div
+                          key={index}
+                          className="text-xs font-mono text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded border"
+                        >
                           M{measureNum}
                         </div>
                       ))
@@ -389,14 +460,81 @@ export function TablatureView({
   return renderHorizontalView()
 }
 
-function getDurationSymbol(duration: string): string {
-  const symbols: Record<string, string> = {
-    'whole': '𝅝',
-    'half': '𝅗𝅥',
-    'quarter': '♩',
-    'eighth': '♫',
-    'sixteenth': '♬',
-    'thirty-second': '♬'
+function NoteDurationSVG({ duration }: { duration: string }) {
+  const getNotePath = () => {
+    switch (duration) {
+      case "whole":
+        return (
+          <g>
+            {/* Whole note - hollow oval */}
+            <ellipse cx="8" cy="6" rx="6" ry="3" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+          </g>
+        )
+      case "half":
+        return (
+          <g>
+            {/* Half note - hollow oval with stem */}
+            <ellipse cx="4" cy="10" rx="3" ry="2" fill="none" stroke="currentColor" strokeWidth="1"/>
+            <line x1="7" y1="10" x2="7" y2="2" stroke="currentColor" strokeWidth="1"/>
+          </g>
+        )
+      case "quarter":
+        return (
+          <g>
+            {/* Quarter note - filled oval with stem */}
+            <ellipse cx="4" cy="10" rx="3" ry="2" fill="currentColor"/>
+            <line x1="7" y1="10" x2="7" y2="2" stroke="currentColor" strokeWidth="1"/>
+          </g>
+        )
+      case "eighth":
+        return (
+          <g>
+            {/* Eighth note - filled oval with stem and flag */}
+            <ellipse cx="4" cy="10" rx="3" ry="2" fill="currentColor"/>
+            <line x1="7" y1="10" x2="7" y2="2" stroke="currentColor" strokeWidth="1"/>
+            <path d="M7 2 Q11 3 10 6 Q9 4 7 4" fill="currentColor"/>
+          </g>
+        )
+      case "sixteenth":
+        return (
+          <g>
+            {/* Sixteenth note - filled oval with stem and double flag */}
+            <ellipse cx="4" cy="10" rx="3" ry="2" fill="currentColor"/>
+            <line x1="7" y1="10" x2="7" y2="2" stroke="currentColor" strokeWidth="1"/>
+            <path d="M7 2 Q11 3 10 6 Q9 4 7 4" fill="currentColor"/>
+            <path d="M7 4 Q10 5 9 7 Q8.5 6 7 6" fill="currentColor"/>
+          </g>
+        )
+      case "thirty-second":
+        return (
+          <g>
+            {/* Thirty-second note - filled oval with stem and triple flag */}
+            <ellipse cx="4" cy="10" rx="3" ry="2" fill="currentColor"/>
+            <line x1="7" y1="10" x2="7" y2="2" stroke="currentColor" strokeWidth="1"/>
+            <path d="M7 2 Q11 3 10 6 Q9 4 7 4" fill="currentColor"/>
+            <path d="M7 4 Q10 5 9 7 Q8.5 6 7 6" fill="currentColor"/>
+            <path d="M7 6 Q9 7 8.5 8.5 Q8 7.5 7 8" fill="currentColor"/>
+          </g>
+        )
+      default:
+        // Default to quarter note
+        return (
+          <g>
+            <ellipse cx="4" cy="10" rx="3" ry="2" fill="currentColor"/>
+            <line x1="7" y1="10" x2="7" y2="2" stroke="currentColor" strokeWidth="1"/>
+          </g>
+        )
+    }
   }
-  return symbols[duration] || '♩'
+
+  return (
+    <svg 
+      width="16" 
+      height="12" 
+      viewBox="0 0 16 12" 
+      className="text-gray-500 dark:text-gray-400"
+    >
+      {getNotePath()}
+    </svg>
+  )
 }
