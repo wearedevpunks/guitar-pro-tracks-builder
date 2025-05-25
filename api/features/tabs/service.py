@@ -1,6 +1,6 @@
 from typing import Optional
 
-from api.collections.redis.tabs_collection import TabsCollection, get_tabs_collection
+from api.db.redis.tabs_collection import TabsCollection, get_tabs_collection
 from api.abstractions.storage import FileReference
 from api.infrastructure.logging import get_logger
 

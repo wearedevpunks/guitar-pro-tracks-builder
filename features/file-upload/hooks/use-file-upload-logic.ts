@@ -2,10 +2,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useMutation } from "@tanstack/react-query"
 import { useFileUploadStore } from "@/stores/file-upload-store"
-import {
-  createNewSongSongsNewPost,
-  CreateSongResponse,
-} from "@/integrations/backend/api"
+import { songCreate, CreateSongResponse } from "@/integrations/backend/api"
 
 export function useFileUploadLogic() {
   const router = useRouter()
@@ -13,7 +10,7 @@ export function useFileUploadLogic() {
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File): Promise<CreateSongResponse> => {
-      const response = await createNewSongSongsNewPost({
+      const response = await songCreate({
         body: { file },
       })
 

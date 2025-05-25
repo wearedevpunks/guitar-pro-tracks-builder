@@ -6,10 +6,10 @@ from .dto import CreateSongResponse, GetSongResponse
 from .actions import create_new_song_action, get_song_by_id_action
 
 
-router = APIRouter(prefix="/songs", tags=["songs"])
+router = APIRouter(prefix="/api/songs", tags=["songs"])
 
 
-@router.post("/new", response_model=CreateSongResponse)
+@router.post("/new", response_model=CreateSongResponse, operation_id="songCreate")
 async def create_new_song(
     file: UploadFile = File(..., description="Guitar Pro file to upload"),
     storage_service: FileStorageService = Depends(get_storage_service),

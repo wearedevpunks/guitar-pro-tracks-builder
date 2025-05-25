@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 from typing import List
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
-from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse, RedirectResponse
 from openai import OpenAI
@@ -15,7 +14,6 @@ from api.routes import songs_router
 from api.infrastructure.logging import get_logger
 
 
-load_dotenv(".env.local")
 logger = get_logger(__name__)
 
 
@@ -69,7 +67,7 @@ class Request(BaseModel):
     messages: List[ClientMessage]
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "messages": [
                     {

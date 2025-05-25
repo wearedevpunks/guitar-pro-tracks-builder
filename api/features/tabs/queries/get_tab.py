@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from pydantic import BaseModel
 
-from api.collections.redis.tabs_collection import Tab, TabsCollection
+from api.db.redis.tabs_collection import Tab, TabsCollection
 from api.infrastructure.logging import get_logger
 
 

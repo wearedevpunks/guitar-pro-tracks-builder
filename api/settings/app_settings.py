@@ -1,13 +1,16 @@
 import os
 from typing import Optional
+from dotenv import load_dotenv
 
+
+load_dotenv(".env.local")
 
 class AppSettings:
     """Singleton class for managing application settings."""
     
     _instance: Optional['AppSettings'] = None
     _initialized: bool = False
-    
+
     def __new__(cls) -> 'AppSettings':
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -35,8 +38,9 @@ class AppSettings:
         self.debug = os.getenv("DEBUG", "false").lower() == "true"
         
         # Redis settings (if using Redis for collections)
-        self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        self.redis_url = os.getenv("REDIS_URL")
         self.redis_db = int(os.getenv("REDIS_DB", "0"))
+        print("redis -> " , self.redis_url)
         
         # CORS settings
         self.cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
