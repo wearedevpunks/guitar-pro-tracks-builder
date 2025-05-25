@@ -5,7 +5,8 @@
       "Bash(cp:*)",
       "Bash(rm:*)",
       "Bash(pnpm lint:*)",
-      "Bash(pnpm dev:*)"
+      "Bash(pnpm dev:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }
