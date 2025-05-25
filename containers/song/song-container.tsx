@@ -65,7 +65,7 @@ export function SongContainer({ songId }: SongContainerProps) {
   if (isEditing) {
     return (
       <TrackEditor
-        parsedData={song.parsed_data || null}
+        parsedData={(song as any).parsed_data || null}
         onClose={handleCloseEditor}
       />
     )
