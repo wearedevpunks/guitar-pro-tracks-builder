@@ -336,11 +336,6 @@ class VideoExportHandlerImpl(VideoExportHandler):
             # Count-in phase
             count_in_number = abs(current_measure)
             
-            # Count-in label
-            count_in_label = "COUNT-IN"
-            cv2.putText(frame, count_in_label, (width//2 - len(count_in_label)*25, height//2 - 220), 
-                       font, 2.5, orange, 4, cv2.LINE_AA)
-            
             # Count-in measure number
             if count_in_measures > 2:
                 measure_text = f"Count-in {count_in_number}"
@@ -398,7 +393,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
         
         # Metronome pendulum
         center_x = width // 2
-        center_y = height // 2 + 200
+        center_y = height // 2 + 250  # Moved down by 50 pixels
         pendulum_length = 150
         
         # Calculate pendulum angle (swings back and forth)
