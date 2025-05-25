@@ -710,6 +710,29 @@
             "description": "Section name from first track beat text",
             "default": ""
           },
+          "tempo_bpm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tempo Bpm",
+            "description": "Current tempo BPM at this measure"
+          },
+          "time_signature": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SerializableTimeSignature"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Current time signature at this measure"
+          },
           "repeat_open": {
             "type": "boolean",
             "title": "Repeat Open",
@@ -747,7 +770,12 @@
           "repeat_alternative": 0,
           "repeat_close": 0,
           "repeat_open": false,
-          "section_name": "Intro"
+          "section_name": "Intro",
+          "tempo_bpm": 120,
+          "time_signature": {
+            "denominator": 4,
+            "numerator": 4
+          }
         }
       },
       "SerializableNote": {

@@ -9,7 +9,9 @@
       "Bash(find:*)",
       "Bash(python:*)",
       "Bash(grep:*)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "Bash(sed:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }

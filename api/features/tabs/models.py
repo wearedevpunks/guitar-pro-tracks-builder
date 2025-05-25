@@ -384,6 +384,10 @@ class SerializableMeasureInfo(BaseModel):
     number: int = Field(..., description="Measure number (1-based)")
     section_name: str = Field("", description="Section name from first track beat text")
     
+    # Tempo and time signature information
+    tempo_bpm: Optional[int] = Field(None, description="Current tempo BPM at this measure")
+    time_signature: Optional[SerializableTimeSignature] = Field(None, description="Current time signature at this measure")
+    
     # Repetition information
     repeat_open: bool = Field(False, description="Has repeat start marker")
     repeat_close: int = Field(0, description="Repeat end count (0 = no repeat end)")
@@ -395,6 +399,11 @@ class SerializableMeasureInfo(BaseModel):
             "example": {
                 "number": 1,
                 "section_name": "Intro",
+                "tempo_bpm": 120,
+                "time_signature": {
+                    "numerator": 4,
+                    "denominator": 4
+                },
                 "repeat_open": False,
                 "repeat_close": 0,
                 "repeat_alternative": 0,

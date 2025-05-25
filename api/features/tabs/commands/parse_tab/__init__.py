@@ -662,19 +662,57 @@ class ParseTabHandlerImpl(ParseTabHandler):
         
         return ' '.join(text_parts) if text_parts else ''
     
+    def _extract_time_signature_safely(self, time_sig) -> 'SerializableTimeSignature':
+        """Extract time signature, handling Duration objects for denominator."""
+        from ...models import SerializableTimeSignature
+        
+        numerator = getattr(time_sig, 'numerator', 4)
+        denominator_value = getattr(time_sig, 'denominator', 4)
+        
+        # Handle Duration object for denominator
+        if hasattr(denominator_value, 'value'):
+            denominator_value = denominator_value.value
+            
+        return SerializableTimeSignature(
+            numerator=numerator,
+            denominator=denominator_value
+        )
+    
     def _extract_song_measures(self, song, tracks) -> List:
         """Extract song-level measures with section names from first track beat text."""
-        from ...models import SerializableMeasureInfo
+        from ...models import SerializableMeasureInfo, SerializableTimeSignature
         
         measures = []
         
         # Get measure count
         measure_count = len(getattr(song, 'measureHeaders', []))
         
+        # Initialize current tempo and time signature from song defaults
+        current_tempo = getattr(song, 'tempo', 120)
+        current_time_sig = None  # Will be set from first measure header or default to 4/4
+        
+        # Pre-scan for tempo changes from beat-level mix table changes
+        tempo_changes = {}  # measure_number -> tempo_bpm
+        for track in getattr(song, 'tracks', []):
+            for measure in getattr(track, 'measures', []):
+                measure_number = getattr(getattr(measure, 'header', None), 'number', 0)
+                if measure_number > 0:
+                    for voice in getattr(measure, 'voices', []):
+                        for beat in getattr(voice, 'beats', []):
+                            effect = getattr(beat, 'effect', None)
+                            if effect:
+                                mtc = getattr(effect, 'mixTableChange', None)
+                                if mtc and hasattr(mtc, 'tempo') and mtc.tempo:
+                                    tempo_value = getattr(mtc.tempo, 'value', None)
+                                    if tempo_value and tempo_value > 0:
+                                        # Store the first tempo change found in this measure
+                                        if measure_number not in tempo_changes:
+                                            tempo_changes[measure_number] = tempo_value
+        
         # If no tracks, just create basic measures without section names but with repetition info
         if not tracks:
             song_measure_headers = getattr(song, 'measureHeaders', [])
-            for i in range(measure_count):
+            for i in range(measure_count):  # First case: no tracks
                 # Still get repetition info from headers even without tracks
                 repeat_open = False
                 repeat_close = 0
@@ -688,25 +726,40 @@ class ParseTabHandlerImpl(ParseTabHandler):
                     repeat_alternative = getattr(header, 'repeatAlternative', 0)
                     double_bar = getattr(header, 'hasDoubleBar', False)
                     
+                    # Update tempo if there's a tempo change (header or beat-level)
+                    if hasattr(header, 'tempo') and header.tempo > 0:
+                        current_tempo = header.tempo
+                    elif (i + 1) in tempo_changes:
+                        current_tempo = tempo_changes[i + 1]
+                    
+                    # Update time signature if available
+                    if hasattr(header, 'timeSignature') and header.timeSignature:
+                        current_time_sig = self._extract_time_signature_safely(header.timeSignature)
+                    elif current_time_sig is None:
+                        # Default to 4/4 if no time signature found yet
+                        current_time_sig = SerializableTimeSignature(numerator=4, denominator=4)
+                    
                     if repeat_close == -1:
                         repeat_close = 0
                 
                 measures.append(SerializableMeasureInfo(
                     number=i + 1,
                     section_name="",
+                    tempo_bpm=current_tempo,
+                    time_signature=current_time_sig if current_time_sig else SerializableTimeSignature(numerator=4, denominator=4),
                     repeat_open=repeat_open,
                     repeat_close=repeat_close,
                     repeat_alternative=repeat_alternative,
                     double_bar=double_bar
                 ))
-            return measures
+            return measures  # No tracks case
         
         # Use first track to extract section names from beat text
         first_track = song.tracks[0] if song.tracks else None
         if not first_track:
             # Fallback: create measures without section names but with repetition info
             song_measure_headers = getattr(song, 'measureHeaders', [])
-            for i in range(measure_count):
+            for i in range(measure_count):  # Second case: no first track
                 repeat_open = False
                 repeat_close = 0
                 repeat_alternative = 0
@@ -719,18 +772,33 @@ class ParseTabHandlerImpl(ParseTabHandler):
                     repeat_alternative = getattr(header, 'repeatAlternative', 0)
                     double_bar = getattr(header, 'hasDoubleBar', False)
                     
+                    # Update tempo if there's a tempo change (header or beat-level)
+                    if hasattr(header, 'tempo') and header.tempo > 0:
+                        current_tempo = header.tempo
+                    elif (i + 1) in tempo_changes:
+                        current_tempo = tempo_changes[i + 1]
+                    
+                    # Update time signature if available
+                    if hasattr(header, 'timeSignature') and header.timeSignature:
+                        current_time_sig = self._extract_time_signature_safely(header.timeSignature)
+                    elif current_time_sig is None:
+                        # Default to 4/4 if no time signature found yet
+                        current_time_sig = SerializableTimeSignature(numerator=4, denominator=4)
+                    
                     if repeat_close == -1:
                         repeat_close = 0
                 
                 measures.append(SerializableMeasureInfo(
                     number=i + 1,
                     section_name="",
+                    tempo_bpm=current_tempo,
+                    time_signature=current_time_sig if current_time_sig else SerializableTimeSignature(numerator=4, denominator=4),
                     repeat_open=repeat_open,
                     repeat_close=repeat_close,
                     repeat_alternative=repeat_alternative,
                     double_bar=double_bar
                 ))
-            return measures
+            return measures  # No first track case
         
         # Extract section names and repetition info from first track measures and song headers
         track_measures = getattr(first_track, 'measures', [])
@@ -753,9 +821,25 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 repeat_alternative = getattr(header, 'repeatAlternative', 0)
                 double_bar = getattr(header, 'hasDoubleBar', False)
                 
+                # Update tempo if there's a tempo change (header or beat-level)
+                if hasattr(header, 'tempo') and header.tempo > 0:
+                    current_tempo = header.tempo
+                elif measure_number in tempo_changes:
+                    current_tempo = tempo_changes[measure_number]
+                
+                # Update time signature if available
+                if hasattr(header, 'timeSignature') and header.timeSignature:
+                    current_time_sig = self._extract_time_signature_safely(header.timeSignature)
+                elif current_time_sig is None:
+                    # Default to 4/4 if no time signature found yet
+                    current_time_sig = SerializableTimeSignature(numerator=4, denominator=4)
+                
                 # Handle repeat close value (-1 means no repeat in guitarpro)
                 if repeat_close == -1:
                     repeat_close = 0
+            elif current_time_sig is None:
+                # Ensure we have a default time signature even if no headers
+                current_time_sig = SerializableTimeSignature(numerator=4, denominator=4)
             
             # Get the corresponding measure from first track for section name
             if measure_idx < len(track_measures):
@@ -778,6 +862,8 @@ class ParseTabHandlerImpl(ParseTabHandler):
             measures.append(SerializableMeasureInfo(
                 number=measure_number,
                 section_name=section_name,
+                tempo_bpm=current_tempo,
+                time_signature=current_time_sig,
                 repeat_open=repeat_open,
                 repeat_close=repeat_close,
                 repeat_alternative=repeat_alternative,
