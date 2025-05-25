@@ -35,7 +35,7 @@ async def export_song_video_action(
             )
         
         # Check if we have parsed data
-        if not song_result.tab or not song_result.tab.file_reference:
+        if not song_result.tab or not song_result.tab.file:
             logger.warning(f"No file reference found for song: {request.song_id}")
             return VideoExportResponse(
                 success=False,
@@ -45,7 +45,7 @@ async def export_song_video_action(
         
         # Parse the tab file to get structured data
         logger.info(f"Parsing tab file for song: {request.song_id}")
-        parse_result = await tabs_service.parse_tab(song_result.tab.file_reference)
+        parse_result = await tabs_service.parse_tab(song_result.tab.file)
         
         if not parse_result.success:
             logger.warning(f"Failed to parse tab for song {request.song_id}: {parse_result.error}")

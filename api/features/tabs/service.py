@@ -7,7 +7,7 @@ from api.infrastructure.logging import get_logger
 
 from .commands.create_tab import CreateTabHandler, CreateTabHandlerImpl, CreateTabCommand, CreateTabResult
 from .commands.parse_tab import ParseTabHandler, ParseTabHandlerImpl, ParseTabCommand, ParseTabResult
-# from .commands.video_export import VideoExportHandler, VideoExportHandlerImpl, VideoExportCommand, VideoExportResult
+from .commands.video_export import VideoExportCommand, VideoExportHandler, VideoExportHandlerImpl
 from .queries.get_tab import GetTabHandler, GetTabHandlerImpl, GetTabQuery, GetTabResult
 
 
@@ -19,7 +19,7 @@ class TabsService:
         create_tab_handler: Optional[CreateTabHandler] = None,
         get_tab_handler: Optional[GetTabHandler] = None,
         parse_tab_handler: Optional[ParseTabHandler] = None,
-        # video_export_handler: Optional[VideoExportHandler] = None,
+        video_export_handler: Optional[VideoExportHandler] = None,
         tabs_collection: Optional[TabsCollection] = None,
         storage_service: Optional[FileStorageService] = None
     ):
@@ -41,7 +41,7 @@ class TabsService:
         self._create_tab_handler = create_tab_handler or CreateTabHandlerImpl(self._tabs_collection)
         self._get_tab_handler = get_tab_handler or GetTabHandlerImpl(self._tabs_collection)
         self._parse_tab_handler = parse_tab_handler or ParseTabHandlerImpl(self._storage_service)
-        # self._video_export_handler = video_export_handler or VideoExportHandlerImpl(self._storage_service)
+        self._video_export_handler = video_export_handler or VideoExportHandlerImpl(self._storage_service)
         
         self.logger.info("TabsService initialized with dependency injection")
     
@@ -122,14 +122,9 @@ class TabsService:
         self.logger.debug(f"Exporting video for song: {parsed_data.song_info.title}")
         
         # For now, return a placeholder since video dependencies aren't installed
-        # command = VideoExportCommand(parsed_data=parsed_data, **kwargs)
-        # result = await self._video_export_handler.handle(command)
-        
-        self.logger.info("Video export feature available but requires additional dependencies")
-        return {
-            "success": False,
-            "error_message": "Video export requires additional dependencies (opencv, moviepy, etc.)"
-        }
+        command = VideoExportCommand(parsed_data=parsed_data, **kwargs)
+        result = await self._video_export_handler.handle(command)
+        return result
 
 
 # Global service instance for convenience

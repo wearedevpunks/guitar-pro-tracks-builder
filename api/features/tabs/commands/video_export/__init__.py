@@ -5,7 +5,7 @@ import tempfile
 import os
 import cv2
 import numpy as np
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, CompositeAudioClip
+from moviepy import VideoFileClip, AudioFileClip
 import librosa
 import soundfile as sf
 
