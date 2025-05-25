@@ -1,0 +1,486 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tabbo API",
+    "description": "API for building and managing Guitar Pro tracks with AI assistance",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/songs/new": {
+      "post": {
+        "tags": [
+          "songs"
+        ],
+        "summary": "Create New Song",
+        "description": "Create a new song by uploading a Guitar Pro file.\n\nThis endpoint accepts a Guitar Pro file, saves it using the configured storage service,\nand creates a new tab entry in the tabs collection.",
+        "operationId": "create_new_song_songs_new_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_new_song_songs_new_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSongResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/songs/{song_id}": {
+      "get": {
+        "tags": [
+          "songs"
+        ],
+        "summary": "Get Song By Id",
+        "description": "Get a song by its ID.\n\nThis endpoint retrieves a song's tab information including the tab ID and file reference.",
+        "operationId": "get_song_by_id_songs__song_id__get",
+        "parameters": [
+          {
+            "name": "song_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Song Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSongResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Chat with AI Assistant",
+        "description": "Stream chat responses from OpenAI with tool calling support for weather information",
+        "operationId": "handle_chat_data_api_chat_post",
+        "parameters": [
+          {
+            "name": "protocol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Response protocol format",
+              "default": "data",
+              "title": "Protocol"
+            },
+            "description": "Response protocol format"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_create_new_song_songs_new_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Guitar Pro file to upload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_new_song_songs_new_post"
+      },
+      "ClientAttachment": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "contentType": {
+            "type": "string",
+            "title": "Contenttype"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "contentType",
+          "url"
+        ],
+        "title": "ClientAttachment"
+      },
+      "ClientMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "experimental_attachments": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ClientAttachment"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experimental Attachments"
+          },
+          "toolInvocations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ToolInvocation"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Toolinvocations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ClientMessage"
+      },
+      "CreateSongResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "song_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Song Id"
+          },
+          "tab_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tab Id"
+          },
+          "file_reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "CreateSongResponse",
+        "description": "Response model for song creation.",
+        "example": {
+          "file_reference": {
+            "provider": "s3",
+            "reference": "songs/123e4567-e89b-12d3-a456-426614174000/master_of_puppets.gp5"
+          },
+          "message": "Song created successfully",
+          "song_id": "123e4567-e89b-12d3-a456-426614174000",
+          "success": true,
+          "tab_id": "123e4567-e89b-12d3-a456-426614174000"
+        }
+      },
+      "FileReference": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Storage provider name (e.g., 'local', 's3')"
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference",
+            "description": "Provider-specific file reference/path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "reference"
+        ],
+        "title": "FileReference",
+        "description": "Reference to a file stored in a storage provider.",
+        "example": {
+          "provider": "s3",
+          "reference": "uploads/songs/master_of_puppets.gp5"
+        }
+      },
+      "GetSongResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "song_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Song Id"
+          },
+          "tab_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tab Id"
+          },
+          "file_reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "GetSongResponse",
+        "description": "Response model for getting a song by ID.",
+        "example": {
+          "file_reference": {
+            "provider": "s3",
+            "reference": "songs/123e4567-e89b-12d3-a456-426614174000/master_of_puppets.gp5"
+          },
+          "message": "Song retrieved successfully",
+          "song_id": "123e4567-e89b-12d3-a456-426614174000",
+          "success": true,
+          "tab_id": "123e4567-e89b-12d3-a456-426614174000"
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Request": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ClientMessage"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages"
+        ],
+        "title": "Request",
+        "description": "Chat request containing conversation messages."
+      },
+      "ToolInvocation": {
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/ToolInvocationState"
+          },
+          "toolCallId": {
+            "type": "string",
+            "title": "Toolcallid"
+          },
+          "toolName": {
+            "type": "string",
+            "title": "Toolname"
+          },
+          "args": {
+            "title": "Args"
+          },
+          "result": {
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "toolCallId",
+          "toolName",
+          "args",
+          "result"
+        ],
+        "title": "ToolInvocation"
+      },
+      "ToolInvocationState": {
+        "type": "string",
+        "enum": [
+          "call",
+          "partial-call",
+          "result"
+        ],
+        "title": "ToolInvocationState"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

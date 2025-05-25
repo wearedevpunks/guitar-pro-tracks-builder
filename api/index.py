@@ -1,4 +1,6 @@
 import json
+import os
+from contextlib import asynccontextmanager
 from typing import List
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
@@ -10,16 +12,48 @@ from api.utils.prompt import ClientMessage, convert_to_openai_messages
 from api.utils.tools import get_current_weather
 from api.settings.app_settings import settings
 from api.routes import songs_router
+from api.infrastructure.logging import get_logger
 
 
 load_dotenv(".env.local")
+logger = get_logger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for startup and shutdown events."""
+    # Startup
+    try:
+        # Get the OpenAPI schema
+        openapi_schema = app.openapi()
+        
+        # Create output directory if it doesn't exist
+        output_dir = "api_docs"
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Write schema to file
+        schema_file = os.path.join(output_dir, "openapi.json")
+        with open(schema_file, "w", encoding="utf-8") as f:
+            json.dump(openapi_schema, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"OpenAPI schema dumped to {schema_file}")
+        
+    except Exception as e:
+        logger.error(f"Failed to dump OpenAPI schema: {e}")
+    
+    yield
+    
+    # Shutdown (if needed)
+    logger.info("Application shutting down")
+
 
 app = FastAPI(
     title="Tabbo API",
     description="API for building and managing Guitar Pro tracks with AI assistance",
     version="1.0.0",
     docs_url="/swagger",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Include routers

@@ -9,10 +9,12 @@
     "dev:all": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "api:codegen": "openapi-ts -i ./api/api_docs/openapi.json -o integrations/backend -c @hey-api/client-fetch"
   },
   "dependencies": {
     "@ai-sdk/ui-utils": "^0.0.20",
+    "@hey-api/client-fetch": "^0.10.1",
     "@radix-ui/react-slot": "^1.1.0",
     "@types/node": "20.2.4",
     "@types/react": "18.2.7",
@@ -43,6 +45,10 @@
     "types": "link:next-themes/dist/types",
     "typescript": "5.0.4",
     "usehooks-ts": "^3.1.0",
+    "zod": "^3.25.28",
     "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.67.6"
   }
 }
