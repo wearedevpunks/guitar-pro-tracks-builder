@@ -109,10 +109,11 @@ class TabsService:
         
         return result
     
-    async def export_video(self, parsed_data, **kwargs):  # -> VideoExportResult:
+    async def export_video(self, song_id: str, parsed_data, **kwargs):  # -> VideoExportResult:
         """Export a metronome video from parsed tab data.
         
         Args:
+            song_id: ID of the song being exported
             parsed_data: ParsedTabData to generate video from
             **kwargs: Additional options (resolution, fps, output_format, etc.)
             
@@ -121,8 +122,7 @@ class TabsService:
         """
         self.logger.debug(f"Exporting video for song: {parsed_data.song_info.title}")
         
-        # For now, return a placeholder since video dependencies aren't installed
-        command = VideoExportCommand(parsed_data=parsed_data, **kwargs)
+        command = VideoExportCommand(song_id=song_id, parsed_data=parsed_data, **kwargs)
         result = await self._video_export_handler.handle(command)
         return result
 

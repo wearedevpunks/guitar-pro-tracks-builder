@@ -67,6 +67,7 @@ async def export_song_video_action(
             export_kwargs["duration_per_measure"] = request.duration_per_measure
         
         video_result = await tabs_service.export_video(
+            request.song_id,
             parse_result.parsed_data, 
             **export_kwargs
         )

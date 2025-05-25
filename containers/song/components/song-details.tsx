@@ -17,21 +17,47 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
         throw new Error("Song ID is missing. Cannot export.")
       }
 
-      const response = await songExportVideo({
-        body: {
-          song_id: song.song_id,
-          output_format: "mp4",
-          resolution: [1920, 1080],
-          fps: 30,
+      // Create an AbortController for timeout management
+      const controller = new AbortController()
+      
+      // Set a 10-minute timeout for video export
+      const timeoutId = setTimeout(() => {
+        controller.abort()
+      }, 10 * 60 * 1000) // 10 minutes
+
+      try {
+        const response = await songExportVideo({
+          body: {
+            song_id: song.song_id,
+            output_format: "mp4",
+            resolution: [1920, 1080],
+            fps: 30,
+          },
+          // Pass the abort signal to the fetch request
+          signal: controller.signal,
+        })
+
+        clearTimeout(timeoutId)
+
+        if (!response.data?.success || !response.data?.video_file) {
+          throw new Error(response.data?.message || "Export failed")
         }
-      })
 
-      if (!response.data?.success || !response.data?.video_file) {
-        throw new Error(response.data?.message || "Export failed")
+        return response.data
+      } catch (error) {
+        clearTimeout(timeoutId)
+        
+        // Handle timeout error specifically
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new Error("Export operation timed out after 10 minutes. Please try again with a shorter song or contact support.")
+        }
+        
+        throw error
       }
-
-      return response.data
     },
+    // Set retry options for failed exports
+    retry: 1,
+    retryDelay: 5000,
     onSuccess: (data) => {
       // Create download link
       const downloadUrl = `/api/files/${data.video_file!.provider}/${data.video_file!.reference}`

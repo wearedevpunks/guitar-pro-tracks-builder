@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from moviepy import VideoFileClip, AudioFileClip
 import soundfile as sf
+from datetime import datetime
 
 from api.abstractions.storage import FileReference
 from api.services.storage import FileStorageService
@@ -17,6 +18,7 @@ from ...models import ParsedTabData, SerializableMeasureInfo
 class VideoExportCommand(BaseModel):
     """Command to export a metronome video from parsed tab data."""
     
+    song_id: str = Field(..., description="ID of the song being exported")
     parsed_data: ParsedTabData = Field(..., description="Parsed tab data to generate video from")
     output_format: str = Field("mp4", description="Output video format")
     resolution: tuple = Field((1920, 1080), description="Video resolution (width, height)")
@@ -85,11 +87,16 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 total_duration
             )
             
-            # Store the video file
-            video_file_ref = await self.storage_service.store_file(
-                video_path,
-                f"{command.parsed_data.song_info.title or 'metronome'}_video.{command.output_format}"
-            )
+            # Store the video file with timestamp in songs folder
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{command.parsed_data.song_info.title or 'metronome'}_video_{timestamp}.{command.output_format}"
+            file_path = f"songs/{command.song_id}/{filename}"
+            
+            with open(video_path, 'rb') as video_file:
+                video_file_ref = await self.storage_service.save_file(
+                    file_path,
+                    video_file
+                )
             
             # Clean up temporary file
             os.unlink(video_path)
