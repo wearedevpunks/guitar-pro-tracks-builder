@@ -167,7 +167,7 @@ class ParsedTabData(BaseModel):
                     {
                         "name": "Electric Guitar",
                         "index": 0,
-                        "settings": {"name": "Electric Guitar", "volume": 8},
+                        "settings": {"name": "Electric Guitar", "volume": 64},
                         "instrument": "Electric Guitar",
                         "string_count": 6,
                         "tuning": [],

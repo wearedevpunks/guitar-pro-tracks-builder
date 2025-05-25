@@ -145,6 +145,16 @@ class ParseTabHandlerImpl(ParseTabHandler):
         # Get track name
         name = getattr(track, 'name', f'Track {index + 1}')
 
+        # Helper function to safely get integer values within range
+        def safe_int(value, default, min_val, max_val):
+            if value is None:
+                return default
+            try:
+                int_val = int(value)
+                return max(min_val, min(max_val, int_val))
+            except (ValueError, TypeError):
+                return default
+
         # Get track settings
         channel = getattr(track, 'channel', None)
         settings = SerializableTrackSettings(
@@ -157,9 +167,9 @@ class ParseTabHandlerImpl(ParseTabHandler):
             is_muted=getattr(track, 'isMute', False),
             is_solo=getattr(track, 'isSolo', False),
             is_visible=getattr(track, 'isVisible', True),
-            volume=getattr(channel, 'volume', 8) if channel else 8,
-            pan=getattr(channel, 'balance', 8) if channel else 8,
-            channel=getattr(channel, 'channel1', 1) if channel else 1
+            volume=safe_int(getattr(channel, 'volume', None) if channel else None, 64, 0, 127),
+            pan=safe_int(getattr(channel, 'balance', None) if channel else None, 64, 0, 127),
+            channel=safe_int(getattr(channel, 'channel1', None) if channel else None, 1, 1, 16)
         )
 
         # Get instrument info
