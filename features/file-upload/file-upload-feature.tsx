@@ -15,7 +15,7 @@ export function FileUploadFeature() {
         <button
           onClick={handleContinue}
           disabled={isUploading}
-          className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isUploading ? "Uploading..." : "Continue with file"}
         </button>

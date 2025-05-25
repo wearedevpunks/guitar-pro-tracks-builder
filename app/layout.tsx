@@ -3,7 +3,7 @@ import { GeistSans } from "geist/font/sans"
 import { Toaster } from "sonner"
 import { cn } from "@/lib/utils"
 import { Navbar } from "@/components/navbar"
-import { initBackendClient } from "@/integrations/backend"
+import { RootProvider } from "@/root/providers"
 
 export const metadata = {
   title: "Guitar Pro Tracks Builder",
@@ -31,16 +31,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  initBackendClient()
   return (
     <html lang="en">
       <head></head>
       <body className={cn(GeistSans.className, "antialiased dark")}>
-        <Toaster position="top-center" richColors />
-        <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] w-full px-4">
-          {children}
-        </div>
+        <RootProvider>
+          <Toaster position="top-center" richColors />
+          <Navbar />
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] w-full px-4">
+            {children}
+          </div>
+        </RootProvider>
       </body>
     </html>
   )
