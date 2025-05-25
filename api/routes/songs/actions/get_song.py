@@ -44,12 +44,20 @@ async def get_song_by_id_action(
         
         logger.info(f"Successfully retrieved song: {song_id}")
         
+        # Parse the tab file to get editable data
+        parse_result = await tabs_service.parse_tab(tab.file)
+        parsed_data = parse_result.parsed_data if parse_result.success else None
+        
+        if not parse_result.success:
+            logger.warning(f"Failed to parse tab file for song {song_id}: {parse_result.error}")
+        
         return SongGetResponse(
             success=True,
             message="Song retrieved successfully",
             song_id=song_id,
             tab_id=tab.id,
-            file_reference=tab.file
+            file_reference=tab.file,
+            parsed_data=parsed_data
         )
         
     except HTTPException:

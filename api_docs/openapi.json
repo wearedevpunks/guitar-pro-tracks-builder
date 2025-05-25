@@ -270,6 +270,72 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "ParsedTabData": {
+        "properties": {
+          "song_info": {
+            "$ref": "#/components/schemas/SerializableSongInfo",
+            "description": "Song metadata"
+          },
+          "tracks": {
+            "items": {
+              "$ref": "#/components/schemas/SerializableTrack"
+            },
+            "type": "array",
+            "title": "Tracks",
+            "description": "List of tracks"
+          },
+          "measure_count": {
+            "type": "integer",
+            "title": "Measure Count",
+            "description": "Total number of measures",
+            "default": 0
+          },
+          "has_lyrics": {
+            "type": "boolean",
+            "title": "Has Lyrics",
+            "description": "Song contains lyrics",
+            "default": false
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Guitar Pro version",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "song_info",
+          "tracks"
+        ],
+        "title": "ParsedTabData",
+        "description": "Complete parsed tab data ready for frontend editing.",
+        "example": {
+          "has_lyrics": false,
+          "measure_count": 32,
+          "song_info": {
+            "album": "Master of Puppets",
+            "artist": "Metallica",
+            "tempo": 212,
+            "title": "Master of Puppets"
+          },
+          "tracks": [
+            {
+              "index": 0,
+              "instrument": "Electric Guitar",
+              "measure_count": 32,
+              "name": "Electric Guitar",
+              "settings": {
+                "name": "Electric Guitar",
+                "volume": 8
+              },
+              "string_count": 6,
+              "tuning": []
+            }
+          ],
+          "version": "5.2"
+        }
+      },
       "Request": {
         "properties": {
           "messages": {
@@ -293,6 +359,341 @@
               "role": "user"
             }
           ]
+        }
+      },
+      "SerializableSongInfo": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Song title",
+            "default": ""
+          },
+          "subtitle": {
+            "type": "string",
+            "title": "Subtitle",
+            "description": "Song subtitle",
+            "default": ""
+          },
+          "artist": {
+            "type": "string",
+            "title": "Artist",
+            "description": "Artist name",
+            "default": ""
+          },
+          "album": {
+            "type": "string",
+            "title": "Album",
+            "description": "Album name",
+            "default": ""
+          },
+          "music": {
+            "type": "string",
+            "title": "Music",
+            "description": "Music composer",
+            "default": ""
+          },
+          "words": {
+            "type": "string",
+            "title": "Words",
+            "description": "Lyrics author",
+            "default": ""
+          },
+          "copyright": {
+            "type": "string",
+            "title": "Copyright",
+            "description": "Copyright notice",
+            "default": ""
+          },
+          "tab": {
+            "type": "string",
+            "title": "Tab",
+            "description": "Tab author",
+            "default": ""
+          },
+          "instructions": {
+            "type": "string",
+            "title": "Instructions",
+            "description": "Performance instructions",
+            "default": ""
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice",
+            "description": "Notice text",
+            "default": ""
+          },
+          "tempo": {
+            "type": "integer",
+            "maximum": 300.0,
+            "minimum": 30.0,
+            "title": "Tempo",
+            "description": "Tempo in BPM",
+            "default": 120
+          },
+          "tempo_name": {
+            "type": "string",
+            "title": "Tempo Name",
+            "description": "Tempo marking name",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SerializableSongInfo",
+        "description": "Serializable song metadata.",
+        "example": {
+          "album": "Master of Puppets",
+          "artist": "Metallica",
+          "copyright": "1986 Metallica",
+          "instructions": "Tune down 1/2 step",
+          "music": "James Hetfield, Lars Ulrich",
+          "notice": "",
+          "subtitle": "",
+          "tab": "Tab transcribed by User",
+          "tempo": 212,
+          "tempo_name": "Fast Rock",
+          "title": "Master of Puppets",
+          "words": "James Hetfield"
+        }
+      },
+      "SerializableStringTuning": {
+        "properties": {
+          "string_number": {
+            "type": "integer",
+            "title": "String Number",
+            "description": "String number (1-8)"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value",
+            "description": "MIDI note value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "string_number",
+          "value"
+        ],
+        "title": "SerializableStringTuning",
+        "description": "Serializable guitar string tuning.",
+        "example": {
+          "string_number": 1,
+          "value": 64
+        }
+      },
+      "SerializableTrack": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Track name"
+          },
+          "index": {
+            "type": "integer",
+            "title": "Index",
+            "description": "Track index in song"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/SerializableTrackSettings",
+            "description": "Track settings"
+          },
+          "instrument": {
+            "type": "string",
+            "title": "Instrument",
+            "description": "Instrument name",
+            "default": ""
+          },
+          "string_count": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 1.0,
+            "title": "String Count",
+            "description": "Number of strings",
+            "default": 6
+          },
+          "tuning": {
+            "items": {
+              "$ref": "#/components/schemas/SerializableStringTuning"
+            },
+            "type": "array",
+            "title": "Tuning",
+            "description": "String tuning"
+          },
+          "measure_count": {
+            "type": "integer",
+            "title": "Measure Count",
+            "description": "Number of measures in track",
+            "default": 0
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Additional metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "index",
+          "settings"
+        ],
+        "title": "SerializableTrack",
+        "description": "Serializable track data for frontend editing.",
+        "example": {
+          "index": 0,
+          "instrument": "Electric Guitar",
+          "measure_count": 32,
+          "metadata": {},
+          "name": "Electric Guitar",
+          "settings": {
+            "channel": 1,
+            "color": "#FF0000",
+            "is_12_stringed": false,
+            "is_acoustic": false,
+            "is_bass": false,
+            "is_drums": false,
+            "is_muted": false,
+            "is_solo": false,
+            "is_visible": true,
+            "name": "Electric Guitar",
+            "pan": 8,
+            "volume": 8
+          },
+          "string_count": 6,
+          "tuning": [
+            {
+              "string_number": 1,
+              "value": 64
+            },
+            {
+              "string_number": 2,
+              "value": 59
+            },
+            {
+              "string_number": 3,
+              "value": 55
+            },
+            {
+              "string_number": 4,
+              "value": 50
+            },
+            {
+              "string_number": 5,
+              "value": 45
+            },
+            {
+              "string_number": 6,
+              "value": 40
+            }
+          ]
+        }
+      },
+      "SerializableTrackSettings": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Track name"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Track color (hex)"
+          },
+          "is_12_stringed": {
+            "type": "boolean",
+            "title": "Is 12 Stringed",
+            "description": "Is 12-stringed guitar",
+            "default": false
+          },
+          "is_acoustic": {
+            "type": "boolean",
+            "title": "Is Acoustic",
+            "description": "Is acoustic guitar",
+            "default": false
+          },
+          "is_bass": {
+            "type": "boolean",
+            "title": "Is Bass",
+            "description": "Is bass guitar",
+            "default": false
+          },
+          "is_drums": {
+            "type": "boolean",
+            "title": "Is Drums",
+            "description": "Is drum track",
+            "default": false
+          },
+          "is_muted": {
+            "type": "boolean",
+            "title": "Is Muted",
+            "description": "Is track muted",
+            "default": false
+          },
+          "is_solo": {
+            "type": "boolean",
+            "title": "Is Solo",
+            "description": "Is track solo",
+            "default": false
+          },
+          "is_visible": {
+            "type": "boolean",
+            "title": "Is Visible",
+            "description": "Is track visible",
+            "default": true
+          },
+          "volume": {
+            "type": "integer",
+            "maximum": 15.0,
+            "minimum": 0.0,
+            "title": "Volume",
+            "description": "Track volume (0-15)",
+            "default": 8
+          },
+          "pan": {
+            "type": "integer",
+            "maximum": 15.0,
+            "minimum": 0.0,
+            "title": "Pan",
+            "description": "Track pan (0-15)",
+            "default": 8
+          },
+          "channel": {
+            "type": "integer",
+            "maximum": 16.0,
+            "minimum": 1.0,
+            "title": "Channel",
+            "description": "MIDI channel",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "SerializableTrackSettings",
+        "description": "Serializable track settings for frontend editing.",
+        "example": {
+          "channel": 1,
+          "color": "#FF0000",
+          "is_12_stringed": false,
+          "is_acoustic": false,
+          "is_bass": false,
+          "is_drums": false,
+          "is_muted": false,
+          "is_solo": false,
+          "is_visible": true,
+          "name": "Electric Guitar",
+          "pan": 8,
+          "volume": 8
         }
       },
       "SongCreateResponse": {
@@ -397,6 +798,16 @@
                 "type": "null"
               }
             ]
+          },
+          "parsed_data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParsedTabData"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -412,6 +823,31 @@
             "reference": "songs/123e4567-e89b-12d3-a456-426614174000/master_of_puppets.gp5"
           },
           "message": "Song retrieved successfully",
+          "parsed_data": {
+            "has_lyrics": false,
+            "measure_count": 32,
+            "song_info": {
+              "album": "Master of Puppets",
+              "artist": "Metallica",
+              "tempo": 212,
+              "title": "Master of Puppets"
+            },
+            "tracks": [
+              {
+                "index": 0,
+                "instrument": "Electric Guitar",
+                "measure_count": 32,
+                "name": "Electric Guitar",
+                "settings": {
+                  "name": "Electric Guitar",
+                  "volume": 8
+                },
+                "string_count": 6,
+                "tuning": []
+              }
+            ],
+            "version": "5.2"
+          },
           "song_id": "123e4567-e89b-12d3-a456-426614174000",
           "success": true,
           "tab_id": "123e4567-e89b-12d3-a456-426614174000"
