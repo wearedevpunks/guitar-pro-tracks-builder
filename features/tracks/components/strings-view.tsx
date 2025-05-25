@@ -61,6 +61,7 @@ export function StringsView({ track }: StringsViewProps) {
               fret: foundNote.fret,
               technique: foundNote.technique || foundNote.effect || foundNote.articulation,
               duration: beat.duration || foundNote.duration,
+              tuplet: beat.tuplet || foundNote.tuplet,
               legato: foundNote.legato || false,
               accent: foundNote.accent || false,
               heavy_accent: foundNote.heavy_accent || false,
@@ -80,7 +81,8 @@ export function StringsView({ track }: StringsViewProps) {
           } else {
             lines[s].push({ 
               fret: "-",
-              duration: beat.duration
+              duration: beat.duration,
+              tuplet: beat.tuplet
             })
           }
         }

@@ -6,6 +6,7 @@ export interface TabNote {
   technique?: string // "P.M.", "H", "P", "B", "S", etc.
   isMeasureSeparator?: boolean
   duration?: string // "quarter", "eighth", "half", etc.
+  tuplet?: { enters: number; times: number } // tuplet information
   legato?: boolean
   accent?: boolean
   heavy_accent?: boolean
@@ -52,7 +53,7 @@ export function TablatureView({
     })
   }
 
-  const renderTabNote = (note: TabNote, index: string) => {
+  const renderTabNote = (note: TabNote, index: string, stringIndex?: number, noteIndex?: number, allNotes?: TabNote[][]) => {
     if (note.isMeasureSeparator) {
       return (
         <div key={index} className="flex items-center px-1">
@@ -71,6 +72,7 @@ export function TablatureView({
       if (note.palm_mute) return 'bg-orange-500'
       if (note.let_ring) return 'bg-green-500'
       if (note.tied) return 'bg-purple-500'
+      if (note.tuplet) return 'bg-cyan-500'
       return 'bg-blue-500'
     }
     
@@ -87,11 +89,58 @@ export function TablatureView({
       if (note.technique) techniques.push(note.technique)
       return techniques.join(' ')
     }
+
+    // Check if this note is part of a tuplet and should show tuplet bracket
+    const shouldShowTupletBracket = () => {
+      if (!note.tuplet || stringIndex === undefined || noteIndex === undefined || !allNotes) return false
+      
+      // Show bracket only on the first string for this beat position
+      if (stringIndex !== 0) return false
+      
+      // Find if this is the start of a tuplet group
+      const tupletStart = noteIndex
+      let tupletCount = 0
+      
+      // Count consecutive notes with the same tuplet
+      for (let i = tupletStart; i < allNotes[0].length && tupletCount < note.tuplet.enters; i++) {
+        const currentNote = allNotes[0][i]
+        if (currentNote?.tuplet?.enters === note.tuplet.enters && 
+            currentNote?.tuplet?.times === note.tuplet.times && 
+            !currentNote.isMeasureSeparator) {
+          tupletCount++
+        } else {
+          break
+        }
+      }
+      
+      return tupletCount === note.tuplet.enters
+    }
     
     return (
       <div key={index} className="relative flex items-center justify-center min-w-[32px] h-12">
         {/* String line */}
         <div className="absolute w-full h-px bg-gray-300 dark:bg-gray-600 top-1/2 transform -translate-y-1/2 z-0"></div>
+        
+        {/* Tuplet bracket (only shown on first string) */}
+        {shouldShowTupletBracket() && note.tuplet && (
+          <div className="absolute -top-8 left-0 right-0 z-30">
+            <div className="flex items-center justify-center">
+              {/* Tuplet bracket */}
+              <div 
+                className="relative border-t border-l border-r border-red-500"
+                style={{ 
+                  width: `${note.tuplet.enters * 32}px`,
+                  height: '8px'
+                }}
+              >
+                {/* Tuplet number */}
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs font-bold text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 px-1 rounded">
+                  {note.tuplet.enters}:{note.tuplet.times}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Note or empty space */}
         {isPlayed ? (
@@ -201,7 +250,7 @@ export function TablatureView({
                 {/* Tab notes */}
                 <div className="flex items-center">
                   {tabLines[stringIndex]?.map((note, noteIndex) => 
-                    renderTabNote(note, `horizontal-${stringIndex}-${noteIndex}`)
+                    renderTabNote(note, `horizontal-${stringIndex}-${noteIndex}`, stringIndex, noteIndex, tabLines)
                   )}
                 </div>
               </div>
@@ -299,7 +348,7 @@ export function TablatureView({
                     {/* Tab notes for this row */}
                     <div className="flex items-center">
                       {row[stringIndex]?.map((note, noteIndex) => 
-                        renderTabNote(note, `${rowIndex}-${stringIndex}-${noteIndex}`)
+                        renderTabNote(note, `${rowIndex}-${stringIndex}-${noteIndex}`, stringIndex, noteIndex, row)
                       )}
                     </div>
                   </div>
