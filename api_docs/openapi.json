@@ -605,6 +605,12 @@
             "description": "Repeat close count (0 = no repeat)",
             "default": 0
           },
+          "repeat_alternative": {
+            "type": "integer",
+            "title": "Repeat Alternative",
+            "description": "Alternative ending number (0 = no alternative)",
+            "default": 0
+          },
           "double_bar": {
             "type": "boolean",
             "title": "Double Bar",
@@ -640,6 +646,7 @@
             "key": 0
           },
           "number": 1,
+          "repeat_alternative": 0,
           "repeat_close": 0,
           "repeat_open": false,
           "time_signature": {
@@ -660,6 +667,30 @@
             "title": "Section Name",
             "description": "Section name from first track beat text",
             "default": ""
+          },
+          "repeat_open": {
+            "type": "boolean",
+            "title": "Repeat Open",
+            "description": "Has repeat start marker",
+            "default": false
+          },
+          "repeat_close": {
+            "type": "integer",
+            "title": "Repeat Close",
+            "description": "Repeat end count (0 = no repeat end)",
+            "default": 0
+          },
+          "repeat_alternative": {
+            "type": "integer",
+            "title": "Repeat Alternative",
+            "description": "Alternative ending number (0 = no alternative)",
+            "default": 0
+          },
+          "double_bar": {
+            "type": "boolean",
+            "title": "Double Bar",
+            "description": "Has double bar line",
+            "default": false
           }
         },
         "type": "object",
@@ -667,9 +698,13 @@
           "number"
         ],
         "title": "SerializableMeasureInfo",
-        "description": "Song-level measure information with section names.",
+        "description": "Song-level measure information with section names and repetitions.",
         "example": {
+          "double_bar": false,
           "number": 1,
+          "repeat_alternative": 0,
+          "repeat_close": 0,
+          "repeat_open": false,
           "section_name": "Intro"
         }
       },

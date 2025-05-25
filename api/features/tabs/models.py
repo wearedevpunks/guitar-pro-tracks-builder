@@ -251,6 +251,7 @@ class SerializableMeasure(BaseModel):
     # Repeat properties
     repeat_open: bool = Field(False, description="Is repeat open")
     repeat_close: int = Field(0, description="Repeat close count (0 = no repeat)")
+    repeat_alternative: int = Field(0, description="Alternative ending number (0 = no alternative)")
     
     # Additional properties
     double_bar: bool = Field(False, description="Has double bar line")
@@ -277,6 +278,7 @@ class SerializableMeasure(BaseModel):
                 "tempo_change": None,
                 "repeat_open": False,
                 "repeat_close": 0,
+                "repeat_alternative": 0,
                 "double_bar": False
             }
         }
@@ -377,16 +379,26 @@ class SerializableSongInfo(BaseModel):
 
 
 class SerializableMeasureInfo(BaseModel):
-    """Song-level measure information with section names."""
+    """Song-level measure information with section names and repetitions."""
     
     number: int = Field(..., description="Measure number (1-based)")
     section_name: str = Field("", description="Section name from first track beat text")
+    
+    # Repetition information
+    repeat_open: bool = Field(False, description="Has repeat start marker")
+    repeat_close: int = Field(0, description="Repeat end count (0 = no repeat end)")
+    repeat_alternative: int = Field(0, description="Alternative ending number (0 = no alternative)")
+    double_bar: bool = Field(False, description="Has double bar line")
     
     class Config:
         json_schema_extra = {
             "example": {
                 "number": 1,
-                "section_name": "Intro"
+                "section_name": "Intro",
+                "repeat_open": False,
+                "repeat_close": 0,
+                "repeat_alternative": 0,
+                "double_bar": False
             }
         }
 

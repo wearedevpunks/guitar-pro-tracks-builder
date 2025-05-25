@@ -330,6 +330,15 @@ class ParseTabHandlerImpl(ParseTabHandler):
         # Additional measure effects (double bar from header)
         double_bar = getattr(header, 'hasDoubleBar', False) if header else False
         
+        # Extract repetition information (prioritize header over measure)
+        repeat_open = getattr(header, 'isRepeatOpen', False) if header else getattr(measure, 'isRepeatOpen', False)
+        repeat_close = getattr(header, 'repeatClose', 0) if header else getattr(measure, 'repeatClose', 0)
+        repeat_alternative = getattr(header, 'repeatAlternative', 0) if header else 0
+        
+        # Handle repeat close value (-1 means no repeat in guitarpro)
+        if repeat_close == -1:
+            repeat_close = 0
+        
         return SerializableMeasure(
             number=measure_number,
             beats=beats,
@@ -337,8 +346,9 @@ class ParseTabHandlerImpl(ParseTabHandler):
             key_signature=key_sig,
             marker=marker,
             tempo_change=tempo_change,
-            repeat_open=getattr(measure, 'isRepeatOpen', False),
-            repeat_close=getattr(measure, 'repeatClose', 0),
+            repeat_open=repeat_open,
+            repeat_close=repeat_close,
+            repeat_alternative=repeat_alternative,
             double_bar=double_bar
         )
     
@@ -661,34 +671,93 @@ class ParseTabHandlerImpl(ParseTabHandler):
         # Get measure count
         measure_count = len(getattr(song, 'measureHeaders', []))
         
-        # If no tracks, just create basic measures without section names
+        # If no tracks, just create basic measures without section names but with repetition info
         if not tracks:
+            song_measure_headers = getattr(song, 'measureHeaders', [])
             for i in range(measure_count):
+                # Still get repetition info from headers even without tracks
+                repeat_open = False
+                repeat_close = 0
+                repeat_alternative = 0
+                double_bar = False
+                
+                if i < len(song_measure_headers):
+                    header = song_measure_headers[i]
+                    repeat_open = getattr(header, 'isRepeatOpen', False)
+                    repeat_close = getattr(header, 'repeatClose', 0)
+                    repeat_alternative = getattr(header, 'repeatAlternative', 0)
+                    double_bar = getattr(header, 'hasDoubleBar', False)
+                    
+                    if repeat_close == -1:
+                        repeat_close = 0
+                
                 measures.append(SerializableMeasureInfo(
                     number=i + 1,
-                    section_name=""
+                    section_name="",
+                    repeat_open=repeat_open,
+                    repeat_close=repeat_close,
+                    repeat_alternative=repeat_alternative,
+                    double_bar=double_bar
                 ))
             return measures
         
         # Use first track to extract section names from beat text
         first_track = song.tracks[0] if song.tracks else None
         if not first_track:
-            # Fallback: create measures without section names
+            # Fallback: create measures without section names but with repetition info
+            song_measure_headers = getattr(song, 'measureHeaders', [])
             for i in range(measure_count):
+                repeat_open = False
+                repeat_close = 0
+                repeat_alternative = 0
+                double_bar = False
+                
+                if i < len(song_measure_headers):
+                    header = song_measure_headers[i]
+                    repeat_open = getattr(header, 'isRepeatOpen', False)
+                    repeat_close = getattr(header, 'repeatClose', 0)
+                    repeat_alternative = getattr(header, 'repeatAlternative', 0)
+                    double_bar = getattr(header, 'hasDoubleBar', False)
+                    
+                    if repeat_close == -1:
+                        repeat_close = 0
+                
                 measures.append(SerializableMeasureInfo(
                     number=i + 1,
-                    section_name=""
+                    section_name="",
+                    repeat_open=repeat_open,
+                    repeat_close=repeat_close,
+                    repeat_alternative=repeat_alternative,
+                    double_bar=double_bar
                 ))
             return measures
         
-        # Extract section names from first track measures
+        # Extract section names and repetition info from first track measures and song headers
         track_measures = getattr(first_track, 'measures', [])
+        song_measure_headers = getattr(song, 'measureHeaders', [])
         
         for measure_idx in range(measure_count):
             measure_number = measure_idx + 1
             section_name = ""
             
-            # Get the corresponding measure from first track
+            # Get repetition information from measure header
+            repeat_open = False
+            repeat_close = 0
+            repeat_alternative = 0
+            double_bar = False
+            
+            if measure_idx < len(song_measure_headers):
+                header = song_measure_headers[measure_idx]
+                repeat_open = getattr(header, 'isRepeatOpen', False)
+                repeat_close = getattr(header, 'repeatClose', 0)
+                repeat_alternative = getattr(header, 'repeatAlternative', 0)
+                double_bar = getattr(header, 'hasDoubleBar', False)
+                
+                # Handle repeat close value (-1 means no repeat in guitarpro)
+                if repeat_close == -1:
+                    repeat_close = 0
+            
+            # Get the corresponding measure from first track for section name
             if measure_idx < len(track_measures):
                 measure = track_measures[measure_idx]
                 voices = getattr(measure, 'voices', [])
@@ -708,7 +777,11 @@ class ParseTabHandlerImpl(ParseTabHandler):
             
             measures.append(SerializableMeasureInfo(
                 number=measure_number,
-                section_name=section_name
+                section_name=section_name,
+                repeat_open=repeat_open,
+                repeat_close=repeat_close,
+                repeat_alternative=repeat_alternative,
+                double_bar=double_bar
             ))
         
         return measures
