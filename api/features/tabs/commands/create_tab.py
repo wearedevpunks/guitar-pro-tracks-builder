@@ -66,9 +66,9 @@ class CreateTabHandlerImpl(CreateTabHandler):
             )
             
             # Create in collection
-            tab_id = await self.tabs_collection.create_with_timestamps(tab, command.tab_id)
+            tab_id, created_at = await self.tabs_collection.create_with_timestamps(tab, command.tab_id)
             
-            self.logger.info(f"Successfully created tab: {tab_id}")
+            self.logger.info(f"Successfully created tab: {tab_id} at {created_at}")
             return CreateTabResult(
                 tab_id=tab_id,
                 success=True
