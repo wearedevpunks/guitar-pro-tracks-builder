@@ -30,7 +30,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateSongResponse"
+                  "$ref": "#/components/schemas/SongCreateResponse"
                 }
               }
             }
@@ -55,7 +55,7 @@
         ],
         "summary": "Get Song By Id",
         "description": "Get a song by its ID.\n\nThis endpoint retrieves a song's tab information including the tab ID and file reference.",
-        "operationId": "get_song_by_id_api_songs__song_id__get",
+        "operationId": "songGet",
         "parameters": [
           {
             "name": "song_id",
@@ -73,7 +73,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetSongResponse"
+                  "$ref": "#/components/schemas/SongGetResponse"
                 }
               }
             }
@@ -232,67 +232,6 @@
         ],
         "title": "ClientMessage"
       },
-      "CreateSongResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          },
-          "song_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Song Id"
-          },
-          "tab_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tab Id"
-          },
-          "file_reference": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FileReference"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "message"
-        ],
-        "title": "CreateSongResponse",
-        "description": "Response model for song creation.",
-        "example": {
-          "file_reference": {
-            "provider": "s3",
-            "reference": "songs/123e4567-e89b-12d3-a456-426614174000/master_of_puppets.gp5"
-          },
-          "message": "Song created successfully",
-          "song_id": "123e4567-e89b-12d3-a456-426614174000",
-          "success": true,
-          "tab_id": "123e4567-e89b-12d3-a456-426614174000"
-        }
-      },
       "FileReference": {
         "properties": {
           "provider": {
@@ -316,67 +255,6 @@
         "example": {
           "provider": "s3",
           "reference": "uploads/songs/master_of_puppets.gp5"
-        }
-      },
-      "GetSongResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          },
-          "song_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Song Id"
-          },
-          "tab_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tab Id"
-          },
-          "file_reference": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FileReference"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "message"
-        ],
-        "title": "GetSongResponse",
-        "description": "Response model for getting a song by ID.",
-        "example": {
-          "file_reference": {
-            "provider": "s3",
-            "reference": "songs/123e4567-e89b-12d3-a456-426614174000/master_of_puppets.gp5"
-          },
-          "message": "Song retrieved successfully",
-          "song_id": "123e4567-e89b-12d3-a456-426614174000",
-          "success": true,
-          "tab_id": "123e4567-e89b-12d3-a456-426614174000"
         }
       },
       "HTTPValidationError": {
@@ -415,6 +293,128 @@
               "role": "user"
             }
           ]
+        }
+      },
+      "SongCreateResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "song_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Song Id"
+          },
+          "tab_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tab Id"
+          },
+          "file_reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "SongCreateResponse",
+        "description": "Response model for song creation.",
+        "example": {
+          "file_reference": {
+            "provider": "s3",
+            "reference": "songs/123e4567-e89b-12d3-a456-426614174000/master_of_puppets.gp5"
+          },
+          "message": "Song created successfully",
+          "song_id": "123e4567-e89b-12d3-a456-426614174000",
+          "success": true,
+          "tab_id": "123e4567-e89b-12d3-a456-426614174000"
+        }
+      },
+      "SongGetResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "song_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Song Id"
+          },
+          "tab_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tab Id"
+          },
+          "file_reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "SongGetResponse",
+        "description": "Response model for getting a song by ID.",
+        "example": {
+          "file_reference": {
+            "provider": "s3",
+            "reference": "songs/123e4567-e89b-12d3-a456-426614174000/master_of_puppets.gp5"
+          },
+          "message": "Song retrieved successfully",
+          "song_id": "123e4567-e89b-12d3-a456-426614174000",
+          "success": true,
+          "tab_id": "123e4567-e89b-12d3-a456-426614174000"
         }
       },
       "ToolInvocation": {

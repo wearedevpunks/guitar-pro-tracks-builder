@@ -2,7 +2,7 @@ from fastapi import HTTPException
 
 from api.features.tabs.service import TabsService
 from api.infrastructure.logging import get_logger
-from ..dto import GetSongResponse
+from ..dto import SongGetResponse
 
 
 logger = get_logger(__name__)
@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 async def get_song_by_id_action(
     song_id: str,
     tabs_service: TabsService
-) -> GetSongResponse:
+) -> SongGetResponse:
     """
     Action to get a song by its ID.
     
@@ -44,7 +44,7 @@ async def get_song_by_id_action(
         
         logger.info(f"Successfully retrieved song: {song_id}")
         
-        return GetSongResponse(
+        return SongGetResponse(
             success=True,
             message="Song retrieved successfully",
             song_id=song_id,

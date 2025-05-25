@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from api.abstractions.storage import FileReference
 
 
-class CreateSongResponse(BaseModel):
+class SongCreateResponse(BaseModel):
     """Response model for song creation."""
     success: bool
     message: str
@@ -27,7 +27,7 @@ class CreateSongResponse(BaseModel):
         }
 
 
-class GetSongResponse(BaseModel):
+class SongGetResponse(BaseModel):
     """Response model for getting a song by ID."""
     success: bool
     message: str

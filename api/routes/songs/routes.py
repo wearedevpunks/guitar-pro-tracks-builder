@@ -2,19 +2,19 @@ from fastapi import APIRouter, UploadFile, File, Depends
 
 from api.services.storage import FileStorageService, get_storage_service
 from api.features.tabs.service import TabsService, get_tabs_service
-from .dto import CreateSongResponse, GetSongResponse
+from .dto import SongCreateResponse, SongGetResponse
 from .actions import create_new_song_action, get_song_by_id_action
 
 
 router = APIRouter(prefix="/api/songs", tags=["songs"])
 
 
-@router.post("/new", response_model=CreateSongResponse, operation_id="songCreate")
+@router.post("/new", operation_id="songCreate", response_model=SongCreateResponse)
 async def create_new_song(
     file: UploadFile = File(..., description="Guitar Pro file to upload"),
     storage_service: FileStorageService = Depends(get_storage_service),
     tabs_service: TabsService = Depends(get_tabs_service)
-) -> CreateSongResponse:
+) -> SongCreateResponse:
     """
     Create a new song by uploading a Guitar Pro file.
     
@@ -24,11 +24,11 @@ async def create_new_song(
     return await create_new_song_action(file, storage_service, tabs_service)
 
 
-@router.get("/{song_id}", response_model=GetSongResponse)
+@router.get("/{song_id}", operation_id="songGet", response_model=SongGetResponse)
 async def get_song_by_id(
     song_id: str,
     tabs_service: TabsService = Depends(get_tabs_service)
-) -> GetSongResponse:
+) -> SongGetResponse:
     """
     Get a song by its ID.
     

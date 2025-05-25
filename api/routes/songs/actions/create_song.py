@@ -4,7 +4,7 @@ from fastapi import UploadFile, HTTPException
 from api.services.storage import FileStorageService
 from api.features.tabs.service import TabsService
 from api.infrastructure.logging import get_logger
-from ..dto import CreateSongResponse
+from ..dto import SongCreateResponse
 
 
 logger = get_logger(__name__)
@@ -14,7 +14,7 @@ async def create_new_song_action(
     file: UploadFile,
     storage_service: FileStorageService,
     tabs_service: TabsService
-) -> CreateSongResponse:
+) -> SongCreateResponse:
     """
     Action to create a new song by uploading a Guitar Pro file.
     
@@ -85,7 +85,7 @@ async def create_new_song_action(
         
         logger.info(f"Successfully created song and tab - Song ID: {song_id}, Tab ID: {create_tab_result.tab_id}")
         
-        return CreateSongResponse(
+        return SongCreateResponse(
             success=True,
             message="Song created successfully",
             song_id=song_id,
