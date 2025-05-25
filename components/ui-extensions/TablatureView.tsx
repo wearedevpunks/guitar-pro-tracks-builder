@@ -224,25 +224,65 @@ export function TablatureView({
     }
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-12">
         {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="min-w-max">
-            {/* String lines for this row */}
-            {Array.from({ length: stringCount }).map((_, stringIndex) => (
-              <div key={stringIndex} className="flex items-center mb-4 last:mb-0">
-                {/* String label */}
-                <div className="w-8 text-right mr-4 text-sm font-mono text-gray-600 dark:text-gray-400 flex-shrink-0">
-                  {stringNames[stringIndex]}
-                </div>
+          <div key={rowIndex} className="relative">
+            {/* Row separator line (except for first row) */}
+            {rowIndex > 0 && (
+              <div className="absolute -top-6 left-0 right-0 border-t border-gray-300 dark:border-gray-600"></div>
+            )}
+            
+            {/* Row number indicator */}
+            <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 text-xs font-mono text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 px-1">
+              {rowIndex + 1}
+            </div>
+            
+            {/* Tablature content */}
+            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div className="min-w-max">
+                {/* String lines for this row */}
+                {Array.from({ length: stringCount }).map((_, stringIndex) => (
+                  <div key={stringIndex} className="flex items-center mb-4 last:mb-0">
+                    {/* String label */}
+                    <div className="w-8 text-right mr-4 text-sm font-mono text-gray-600 dark:text-gray-400 flex-shrink-0 font-medium">
+                      {stringNames[stringIndex]}
+                    </div>
+                    
+                    {/* Tab notes for this row */}
+                    <div className="flex items-center">
+                      {row[stringIndex]?.map((note, noteIndex) => 
+                        renderTabNote(note, `${rowIndex}-${noteIndex}`)
+                      )}
+                    </div>
+                  </div>
+                ))}
                 
-                {/* Tab notes for this row */}
-                <div className="flex items-center">
-                  {row[stringIndex]?.map((note, noteIndex) => 
-                    renderTabNote(note, `${rowIndex}-${noteIndex}`)
-                  )}
+                {/* Measure numbers for this row */}
+                <div className="flex mt-4 pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <div className="w-8 mr-4 flex-shrink-0"></div>
+                  <div className="flex items-center gap-4">
+                    {/* Calculate measure numbers for this row */}
+                    {(() => {
+                      const measuresInThisRow: number[] = []
+                      let measureCount = 0
+                      
+                      row[0]?.forEach((note, noteIndex) => {
+                        if (note.isMeasureSeparator) {
+                          measureCount++
+                          measuresInThisRow.push(rowIndex * measuresPerRow + measureCount)
+                        }
+                      })
+                      
+                      return measuresInThisRow.map((measureNum, index) => (
+                        <div key={index} className="text-xs font-mono text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded border">
+                          M{measureNum}
+                        </div>
+                      ))
+                    })()}
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         ))}
       </div>
