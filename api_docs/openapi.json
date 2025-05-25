@@ -327,7 +327,7 @@
               "name": "Electric Guitar",
               "settings": {
                 "name": "Electric Guitar",
-                "volume": 8
+                "volume": 64
               },
               "string_count": 6,
               "tuning": []
@@ -652,19 +652,19 @@
           },
           "volume": {
             "type": "integer",
-            "maximum": 15.0,
+            "maximum": 127.0,
             "minimum": 0.0,
             "title": "Volume",
-            "description": "Track volume (0-15)",
-            "default": 8
+            "description": "Track volume (0-127)",
+            "default": 64
           },
           "pan": {
             "type": "integer",
-            "maximum": 15.0,
+            "maximum": 127.0,
             "minimum": 0.0,
             "title": "Pan",
-            "description": "Track pan (0-15)",
-            "default": 8
+            "description": "Track pan (0-127)",
+            "default": 64
           },
           "channel": {
             "type": "integer",
@@ -692,8 +692,8 @@
           "is_solo": false,
           "is_visible": true,
           "name": "Electric Guitar",
-          "pan": 8,
-          "volume": 8
+          "pan": 64,
+          "volume": 64
         }
       },
       "SongCreateResponse": {

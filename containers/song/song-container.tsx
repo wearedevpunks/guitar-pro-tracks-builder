@@ -19,16 +19,16 @@ export function SongContainer({ songId }: SongContainerProps) {
     data: song,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery({
-    queryKey: ['song', songId],
+    queryKey: ["song", songId],
     queryFn: async () => {
       const response = await getSongByIdApiSongsSongIdGet({
-        path: { song_id: songId }
+        path: { song_id: songId },
       })
 
       if (!response.data?.success || !response.data.song_id) {
-        throw new Error(response.data?.message || 'Song not found')
+        throw new Error(response.data?.message || "Song not found")
       }
 
       return response.data
@@ -51,35 +51,25 @@ export function SongContainer({ songId }: SongContainerProps) {
 
   if (error) {
     return (
-      <ErrorMessage 
-        message="Failed to load song details" 
+      <ErrorMessage
+        message="Failed to load song details"
         onRetry={() => refetch()}
       />
     )
   }
 
   if (!song) {
-    return (
-      <ErrorMessage 
-        message="Song not found" 
-        onRetry={() => refetch()}
-      />
-    )
+    return <ErrorMessage message="Song not found" onRetry={() => refetch()} />
   }
 
   if (isEditing) {
     return (
-      <TrackEditor 
-        song={song} 
+      <TrackEditor
+        parsedData={song.parsed_data || null}
         onClose={handleCloseEditor}
       />
     )
   }
 
-  return (
-    <SongDetails 
-      song={song} 
-      onEditSong={handleEditSong}
-    />
-  )
+  return <SongDetails song={song} onEditSong={handleEditSong} />
 }
