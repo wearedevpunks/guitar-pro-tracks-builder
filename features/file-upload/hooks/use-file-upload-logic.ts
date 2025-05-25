@@ -1,17 +1,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useFileUploadStore } from "@/stores/file-upload-store"
-
-interface CreateSongResponse {
-  success: boolean
-  message: string
-  song_id?: string
-  tab_id?: string
-  file_reference?: {
-    provider: string
-    reference: string
-  }
-}
+import { createNewSongSongsNewPost, type CreateSongResponse, apiClient } from "@/integrations/backend"
 
 export function useFileUploadLogic() {
   const router = useRouter()
@@ -23,19 +13,16 @@ export function useFileUploadLogic() {
   }
 
   const uploadFile = async (file: File): Promise<CreateSongResponse> => {
-    const formData = new FormData()
-    formData.append("file", file)
-
-    const response = await fetch("/api/songs/new", {
-      method: "POST",
-      body: formData,
+    const response = await createNewSongSongsNewPost({
+      body: { file },
+      client: apiClient
     })
 
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`)
+    if (!response.data) {
+      throw new Error(`Upload failed`)
     }
 
-    return response.json()
+    return response.data
   }
 
   const handleContinue = async () => {
