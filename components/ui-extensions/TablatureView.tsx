@@ -29,7 +29,14 @@ interface TablatureViewProps {
   tabLines: TabNote[][] // Array of tab lines, one per string
   tempo?: number
   timeSignature?: string
-  measures?: Array<{ number: number; section_name?: string }> // Measure info with section names
+  measures?: Array<{ 
+    number: number
+    section_name?: string
+    repeat_open?: boolean
+    repeat_close?: number
+    repeat_alternative?: number
+    double_bar?: boolean
+  }> // Measure info with section names and repeat markers
 }
 
 export function TablatureView({
@@ -327,12 +334,47 @@ export function TablatureView({
                                 32
                               }px`,
                       }}
-                      className="text-xs text-gray-500 dark:text-gray-400 text-center min-w-[32px]"
+                      className="text-xs text-gray-500 dark:text-gray-400 text-center min-w-[32px] relative"
                     >
-                      <div className="font-mono">{measureNumber}</div>
+                      {/* Repeat markers */}
+                      <div className="flex items-center justify-center mb-1">
+                        {measureInfo?.repeat_open && (
+                          <div className="text-lg font-bold text-green-600 dark:text-green-400 mr-1" title="Repeat Start">
+                            |:
+                          </div>
+                        )}
+                        <div className="font-mono">{measureNumber}</div>
+                        {measureInfo?.repeat_close && measureInfo.repeat_close > 0 && (
+                          <div className="text-lg font-bold text-red-600 dark:text-red-400 ml-1" title={`Repeat End (${measureInfo.repeat_close}x)`}>
+                            :|
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Repeat count indicator */}
+                      {measureInfo?.repeat_close && measureInfo.repeat_close > 1 && (
+                        <div className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1 rounded">
+                          {measureInfo.repeat_close}x
+                        </div>
+                      )}
+                      
+                      {/* Alternative ending indicator */}
+                      {measureInfo?.repeat_alternative && measureInfo.repeat_alternative > 0 && (
+                        <div className="text-xs font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-1 rounded mt-1">
+                          {measureInfo.repeat_alternative}.
+                        </div>
+                      )}
+                      
+                      {/* Section name */}
                       {sectionName && (
                         <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1 whitespace-nowrap">
                           {sectionName}
+                        </div>
+                      )}
+                      
+                      {/* Double bar indicator */}
+                      {measureInfo?.double_bar && (
+                        <div className="absolute -right-1 top-0 bottom-0 w-0.5 bg-gray-700 dark:bg-gray-300" title="Double Bar">
                         </div>
                       )}
                     </div>
@@ -458,12 +500,47 @@ export function TablatureView({
                         return (
                           <div
                             key={index}
-                            className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded border"
+                            className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded border relative"
                           >
-                            <div className="font-mono">M{measureNum}</div>
+                            {/* Repeat markers */}
+                            <div className="flex items-center justify-center mb-1">
+                              {measureInfo?.repeat_open && (
+                                <div className="text-sm font-bold text-green-600 dark:text-green-400 mr-1" title="Repeat Start">
+                                  |:
+                                </div>
+                              )}
+                              <div className="font-mono">M{measureNum}</div>
+                              {measureInfo?.repeat_close && measureInfo.repeat_close > 0 && (
+                                <div className="text-sm font-bold text-red-600 dark:text-red-400 ml-1" title={`Repeat End (${measureInfo.repeat_close}x)`}>
+                                  :|
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Repeat count indicator */}
+                            {measureInfo?.repeat_close && measureInfo.repeat_close > 1 && (
+                              <div className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1 rounded mb-1">
+                                {measureInfo.repeat_close}x
+                              </div>
+                            )}
+                            
+                            {/* Alternative ending indicator */}
+                            {measureInfo?.repeat_alternative && measureInfo.repeat_alternative > 0 && (
+                              <div className="text-xs font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-1 rounded mb-1">
+                                {measureInfo.repeat_alternative}.
+                              </div>
+                            )}
+                            
+                            {/* Section name */}
                             {sectionName && (
-                              <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                              <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                                 {sectionName}
+                              </div>
+                            )}
+                            
+                            {/* Double bar indicator */}
+                            {measureInfo?.double_bar && (
+                              <div className="absolute -right-0.5 top-0 bottom-0 w-0.5 bg-gray-700 dark:bg-gray-300" title="Double Bar">
                               </div>
                             )}
                           </div>
