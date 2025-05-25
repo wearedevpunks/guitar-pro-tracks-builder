@@ -67,7 +67,8 @@ class SerializableTrack(BaseModel):
     string_count: int = Field(6, description="Number of strings", ge=1, le=8)
     tuning: List[SerializableStringTuning] = Field(default_factory=list, description="String tuning")
     
-    # Additional metadata that might be useful for editing
+    # Measures data
+    measures: List[SerializableMeasure] = Field(default_factory=list, description="Measures in this track")
     measure_count: int = Field(0, description="Number of measures in track")
     
     # Raw data for reconstruction (if needed)
@@ -177,5 +178,202 @@ class ParsedTabData(BaseModel):
                 "measure_count": 32,
                 "has_lyrics": False,
                 "version": "5.2"
+            }
+        }
+
+
+class SerializableNote(BaseModel):
+    """Serializable note data."""
+    
+    string: int = Field(..., description="String number (1-based)")
+    fret: int = Field(..., description="Fret number")
+    value: int = Field(..., description="MIDI note value")
+    velocity: int = Field(95, description="Note velocity (0-127)", ge=0, le=127)
+    tied: bool = Field(False, description="Is note tied")
+    muted: bool = Field(False, description="Is note muted")
+    ghost: bool = Field(False, description="Is ghost note")
+    accent: bool = Field(False, description="Has accent")
+    heavy_accent: bool = Field(False, description="Has heavy accent")
+    harmonic: bool = Field(False, description="Is harmonic")
+    palm_mute: bool = Field(False, description="Has palm mute")
+    staccato: bool = Field(False, description="Is staccato")
+    let_ring: bool = Field(False, description="Let ring")
+    
+    # Additional effects
+    bend_value: Optional[float] = Field(None, description="Bend value in semitones")
+    slide_type: Optional[str] = Field(None, description="Slide type")
+    vibrato: bool = Field(False, description="Has vibrato")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "string": 1,
+                "fret": 12,
+                "value": 64,
+                "velocity": 95,
+                "tied": False,
+                "muted": False,
+                "ghost": False,
+                "accent": False,
+                "heavy_accent": False,
+                "harmonic": False,
+                "palm_mute": False,
+                "staccato": False,
+                "let_ring": False,
+                "bend_value": None,
+                "slide_type": None,
+                "vibrato": False
+            }
+        }
+
+
+class SerializableVoice(BaseModel):
+    """Serializable voice data."""
+    
+    notes: List[SerializableNote] = Field(default_factory=list, description="Notes in this voice")
+    duration: str = Field("quarter", description="Note duration (whole, half, quarter, eighth, sixteenth, etc.)")
+    tuplet: Optional[Dict[str, int]] = Field(None, description="Tuplet information (enters, times)")
+    is_rest: bool = Field(False, description="Is this voice a rest")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "notes": [
+                    {
+                        "string": 1,
+                        "fret": 12,
+                        "value": 64,
+                        "velocity": 95
+                    }
+                ],
+                "duration": "quarter",
+                "tuplet": None,
+                "is_rest": False
+            }
+        }
+
+
+class SerializableBeat(BaseModel):
+    """Serializable beat data."""
+    
+    voices: List[SerializableVoice] = Field(default_factory=list, description="Voices in this beat")
+    start_time: int = Field(0, description="Start time in ticks")
+    duration: str = Field("quarter", description="Beat duration")
+    
+    # Beat effects
+    fade_in: bool = Field(False, description="Has fade in")
+    fade_out: bool = Field(False, description="Has fade out")
+    volume_swell: bool = Field(False, description="Has volume swell")
+    tremolo_picking: bool = Field(False, description="Has tremolo picking")
+    
+    # Stroke effects
+    stroke_direction: Optional[str] = Field(None, description="Stroke direction (up/down)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "voices": [
+                    {
+                        "notes": [{"string": 1, "fret": 12, "value": 64}],
+                        "duration": "quarter",
+                        "is_rest": False
+                    }
+                ],
+                "start_time": 0,
+                "duration": "quarter",
+                "fade_in": False,
+                "fade_out": False,
+                "volume_swell": False,
+                "tremolo_picking": False,
+                "stroke_direction": None
+            }
+        }
+
+
+class SerializableTimeSignature(BaseModel):
+    """Serializable time signature."""
+    
+    numerator: int = Field(4, description="Time signature numerator")
+    denominator: int = Field(4, description="Time signature denominator")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "numerator": 4,
+                "denominator": 4
+            }
+        }
+
+
+class SerializableKeySignature(BaseModel):
+    """Serializable key signature."""
+    
+    key: int = Field(0, description="Key signature (-7 to +7)")
+    is_minor: bool = Field(False, description="Is minor key")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "key": 0,  # C major / A minor
+                "is_minor": False
+            }
+        }
+
+
+class SerializableMarker(BaseModel):
+    """Serializable marker data."""
+    
+    title: str = Field("", description="Marker title")
+    color: Optional[str] = Field(None, description="Marker color (hex)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "title": "Chorus",
+                "color": "#FF0000"
+            }
+        }
+
+
+class SerializableMeasure(BaseModel):
+    """Serializable measure data."""
+    
+    number: int = Field(1, description="Measure number (1-based)")
+    beats: List[SerializableBeat] = Field(default_factory=list, description="Beats in this measure")
+    
+    # Measure properties
+    time_signature: Optional[SerializableTimeSignature] = Field(None, description="Time signature (if changed)")
+    key_signature: Optional[SerializableKeySignature] = Field(None, description="Key signature (if changed)")
+    marker: Optional[SerializableMarker] = Field(None, description="Marker at this measure")
+    
+    # Repeat properties
+    repeat_open: bool = Field(False, description="Is repeat open")
+    repeat_close: int = Field(0, description="Repeat close count (0 = no repeat)")
+    
+    # Additional properties
+    double_bar: bool = Field(False, description="Has double bar line")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "number": 1,
+                "beats": [
+                    {
+                        "voices": [
+                            {
+                                "notes": [{"string": 1, "fret": 0, "value": 40}],
+                                "duration": "quarter"
+                            }
+                        ],
+                        "start_time": 0,
+                        "duration": "quarter"
+                    }
+                ],
+                "time_signature": {"numerator": 4, "denominator": 4},
+                "key_signature": {"key": 0, "is_minor": False},
+                "marker": None,
+                "repeat_open": False,
+                "repeat_close": 0,
+                "double_bar": False
             }
         }

@@ -12,7 +12,14 @@ from ...models import (
     SerializableSongInfo,
     SerializableTrack,
     SerializableTrackSettings,
-    SerializableStringTuning
+    SerializableStringTuning,
+    SerializableMeasure,
+    SerializableBeat,
+    SerializableVoice,
+    SerializableNote,
+    SerializableTimeSignature,
+    SerializableKeySignature,
+    SerializableMarker
 )
 
 logger = get_logger(__name__)
@@ -187,9 +194,18 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 value=getattr(string, 'value', 40 + i * 5)  # Default tuning
             ))
 
-        # Get measure count for this track
-        measures = getattr(track, 'measures', [])
-        measure_count = len(measures)
+        # Parse measures for this track
+        track_measures = getattr(track, 'measures', [])
+        measure_count = len(track_measures)
+        song_measure_headers = getattr(track.song, 'measureHeaders', [])
+        
+        # Convert measures to serializable format
+        serializable_measures = []
+        for i, measure in enumerate(track_measures):
+            serializable_measure = self._convert_measure_to_serializable(
+                measure, i + 1, song_measure_headers[i] if i < len(song_measure_headers) else None
+            )
+            serializable_measures.append(serializable_measure)
 
         # Additional metadata
         metadata = {
@@ -210,6 +226,7 @@ class ParseTabHandlerImpl(ParseTabHandler):
             instrument=instrument,
             string_count=string_count,
             tuning=tuning,
+            measures=serializable_measures,
             measure_count=measure_count,
             metadata=metadata
         )
@@ -227,4 +244,168 @@ class ParseTabHandlerImpl(ParseTabHandler):
             b = getattr(color, 'b', 0)
             return f"#{r:02x}{g:02x}{b:02x}"
 
+        return None
+    
+    def _convert_measure_to_serializable(self, measure, measure_number: int, header=None) -> SerializableMeasure:
+        """Convert PyGuitarPro Measure to serializable format."""
+        
+        # Parse beats/voices in this measure
+        beats = []
+        voices = getattr(measure, 'voices', [])
+        
+        for voice in voices:
+            voice_beats = getattr(voice, 'beats', [])
+            for beat in voice_beats:
+                serializable_beat = self._convert_beat_to_serializable(beat)
+                beats.append(serializable_beat)
+        
+        # Get time signature (from header or measure)
+        time_sig = None
+        if header and hasattr(header, 'timeSignature'):
+            ts = header.timeSignature
+            time_sig = SerializableTimeSignature(
+                numerator=getattr(ts, 'numerator', 4),
+                denominator=getattr(ts, 'denominator', 4)
+            )
+        elif hasattr(measure, 'timeSignature') and measure.timeSignature:
+            ts = measure.timeSignature
+            time_sig = SerializableTimeSignature(
+                numerator=getattr(ts, 'numerator', 4),
+                denominator=getattr(ts, 'denominator', 4)
+            )
+        
+        # Get key signature
+        key_sig = None
+        if hasattr(measure, 'keySignature') and measure.keySignature:
+            ks = measure.keySignature
+            key_sig = SerializableKeySignature(
+                key=getattr(ks, 'key', 0),
+                is_minor=getattr(ks, 'isMinor', False)
+            )
+        
+        # Get marker
+        marker = None
+        if hasattr(measure, 'marker') and measure.marker:
+            m = measure.marker
+            marker = SerializableMarker(
+                title=getattr(m, 'title', ''),
+                color=self._convert_marker_color(m)
+            )
+        
+        return SerializableMeasure(
+            number=measure_number,
+            beats=beats,
+            time_signature=time_sig,
+            key_signature=key_sig,
+            marker=marker,
+            repeat_open=getattr(measure, 'isRepeatOpen', False),
+            repeat_close=getattr(measure, 'repeatClose', 0),
+            double_bar=False  # Could be derived from header if needed
+        )
+    
+    def _convert_beat_to_serializable(self, beat) -> SerializableBeat:
+        """Convert PyGuitarPro Beat to serializable format."""
+        
+        # Parse notes in this beat
+        notes = getattr(beat, 'notes', [])
+        serializable_notes = []
+        
+        for note in notes:
+            if hasattr(note, 'string') and hasattr(note, 'value'):
+                serializable_note = self._convert_note_to_serializable(note)
+                serializable_notes.append(serializable_note)
+        
+        # Create voice for these notes
+        voice = SerializableVoice(
+            notes=serializable_notes,
+            duration=self._get_duration_string(beat),
+            is_rest=len(serializable_notes) == 0
+        )
+        
+        # Get beat effects
+        effect = getattr(beat, 'effect', None)
+        
+        return SerializableBeat(
+            voices=[voice],
+            start_time=getattr(beat, 'start', 0),
+            duration=self._get_duration_string(beat),
+            fade_in=getattr(effect, 'fadeIn', False) if effect else False,
+            fade_out=getattr(effect, 'fadeOut', False) if effect else False,
+            volume_swell=getattr(effect, 'volumeSwell', False) if effect else False,
+            tremolo_picking=getattr(effect, 'tremoloPicking', False) if effect else False
+        )
+    
+    def _convert_note_to_serializable(self, note) -> SerializableNote:
+        """Convert PyGuitarPro Note to serializable format."""
+        
+        # Get note effects
+        effect = getattr(note, 'effect', None)
+        
+        return SerializableNote(
+            string=getattr(note, 'string', 1),
+            fret=getattr(note, 'value', 0),
+            value=getattr(note, 'realValue', 40),  # MIDI value
+            velocity=getattr(note, 'velocity', 95),
+            tied=getattr(note, 'isTiedNote', False),
+            muted=getattr(note, 'type', None) == 'muted' if hasattr(note, 'type') else False,
+            ghost=getattr(note, 'type', None) == 'ghost' if hasattr(note, 'type') else False,
+            accent=getattr(effect, 'accentuatedNote', False) if effect else False,
+            heavy_accent=getattr(effect, 'heavyAccentuatedNote', False) if effect else False,
+            harmonic=getattr(effect, 'harmonic', None) is not None if effect else False,
+            palm_mute=getattr(effect, 'palmMute', False) if effect else False,
+            staccato=getattr(effect, 'staccato', False) if effect else False,
+            let_ring=getattr(effect, 'letRing', False) if effect else False,
+            bend_value=self._get_bend_value(effect) if effect else None,
+            slide_type=self._get_slide_type(effect) if effect else None,
+            vibrato=getattr(effect, 'vibrato', False) if effect else False
+        )
+    
+    def _get_duration_string(self, beat) -> str:
+        """Convert beat duration to string representation."""
+        duration = getattr(beat, 'duration', None)
+        if not duration:
+            return "quarter"
+        
+        # Map duration values to string names
+        duration_map = {
+            1: "whole",
+            2: "half", 
+            4: "quarter",
+            8: "eighth",
+            16: "sixteenth",
+            32: "thirty-second",
+            64: "sixty-fourth"
+        }
+        
+        value = getattr(duration, 'value', 4)
+        return duration_map.get(value, "quarter")
+    
+    def _get_bend_value(self, effect) -> Optional[float]:
+        """Extract bend value from note effect."""
+        if hasattr(effect, 'bend') and effect.bend:
+            bend = effect.bend
+            if hasattr(bend, 'value'):
+                return getattr(bend, 'value', 0) / 100.0  # Convert to semitones
+        return None
+    
+    def _get_slide_type(self, effect) -> Optional[str]:
+        """Extract slide type from note effect."""
+        if hasattr(effect, 'slides') and effect.slides:
+            slides = effect.slides
+            if slides:
+                return str(slides[0]) if slides else None
+        return None
+    
+    def _convert_marker_color(self, marker) -> Optional[str]:
+        """Convert marker color to hex string."""
+        color = getattr(marker, 'color', None)
+        if not color:
+            return None
+        
+        if hasattr(color, 'r') and hasattr(color, 'g') and hasattr(color, 'b'):
+            r = getattr(color, 'r', 0)
+            g = getattr(color, 'g', 0) 
+            b = getattr(color, 'b', 0)
+            return f"#{r:02x}{g:02x}{b:02x}"
+        
         return None
