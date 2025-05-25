@@ -77,6 +77,20 @@ class SerializableNote(BaseModel):
     slide_type: Optional[str] = Field(None, description="Slide type")
     vibrato: bool = Field(False, description="Has vibrato")
     
+    # Legato techniques
+    hammer_on: bool = Field(False, description="Is hammer-on")
+    pull_off: bool = Field(False, description="Is pull-off")
+    
+    # Advanced techniques
+    trill: bool = Field(False, description="Has trill")
+    tremolo_picking: bool = Field(False, description="Has tremolo picking")
+    grace_note: bool = Field(False, description="Is grace note")
+    grace_note_type: Optional[str] = Field(None, description="Grace note type (before/on beat)")
+    
+    # Fingering
+    left_hand_finger: Optional[int] = Field(None, description="Left hand finger (1-4)", ge=1, le=4)
+    right_hand_finger: Optional[str] = Field(None, description="Right hand finger (p,i,m,a,c)")
+    
     class Config:
         json_schema_extra = {
             "example": {
@@ -95,7 +109,15 @@ class SerializableNote(BaseModel):
                 "let_ring": False,
                 "bend_value": None,
                 "slide_type": None,
-                "vibrato": False
+                "vibrato": False,
+                "hammer_on": False,
+                "pull_off": False,
+                "trill": False,
+                "tremolo_picking": False,
+                "grace_note": False,
+                "grace_note_type": None,
+                "left_hand_finger": None,
+                "right_hand_finger": None
             }
         }
 

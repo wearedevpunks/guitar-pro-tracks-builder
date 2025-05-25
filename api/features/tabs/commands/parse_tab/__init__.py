@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Dict
 from pydantic import BaseModel, Field
 import io
 import guitarpro
@@ -257,7 +257,7 @@ class ParseTabHandlerImpl(ParseTabHandler):
         for voice in voices:
             voice_beats = getattr(voice, 'beats', [])
             for beat in voice_beats:
-                serializable_beat = self._convert_beat_to_serializable(beat)
+                serializable_beat = self._convert_beat_to_serializable(beat, voice)
                 beats.append(serializable_beat)
         
         # Helper function to safely extract integer from time signature components
@@ -338,7 +338,7 @@ class ParseTabHandlerImpl(ParseTabHandler):
             double_bar=double_bar
         )
     
-    def _convert_beat_to_serializable(self, beat) -> SerializableBeat:
+    def _convert_beat_to_serializable(self, beat, voice=None) -> SerializableBeat:
         """Convert PyGuitarPro Beat to serializable format."""
         
         # Parse notes in this beat
@@ -350,17 +350,11 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 serializable_note = self._convert_note_to_serializable(note)
                 serializable_notes.append(serializable_note)
         
-        # Get tuplet information if available
-        tuplet = None
-        beat_tuplet = getattr(beat, 'tuplet', None)
-        if beat_tuplet:
-            tuplet = {
-                'enters': getattr(beat_tuplet, 'enters', 3),
-                'times': getattr(beat_tuplet, 'times', 2)
-            }
+        # Get tuplet information using improved extraction
+        tuplet = self._get_tuplet_info(beat, voice)
         
         # Create voice for these notes
-        voice = SerializableVoice(
+        serializable_voice = SerializableVoice(
             notes=serializable_notes,
             duration=self._get_duration_string(beat),
             tuplet=tuplet,
@@ -380,7 +374,7 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 stroke_direction = str(direction).lower() if hasattr(direction, 'name') else str(direction).lower()
         
         return SerializableBeat(
-            voices=[voice],
+            voices=[serializable_voice],
             start_time=getattr(beat, 'start', 0),
             duration=self._get_duration_string(beat),
             fade_in=getattr(effect, 'fadeIn', False) if effect else False,
@@ -426,7 +420,21 @@ class ParseTabHandlerImpl(ParseTabHandler):
             let_ring=bool(getattr(effect, 'letRing', False)) if effect else False,
             bend_value=self._get_bend_value(effect) if effect else None,
             slide_type=self._get_slide_type(effect) if effect else None,
-            vibrato=bool(getattr(effect, 'vibrato', False)) if effect else False
+            vibrato=bool(getattr(effect, 'vibrato', False)) if effect else False,
+            
+            # Legato techniques
+            hammer_on=self._is_hammer_on(effect) if effect else False,
+            pull_off=self._is_pull_off(effect) if effect else False,
+            
+            # Advanced techniques  
+            trill=bool(getattr(effect, 'trill', False)) if effect else False,
+            tremolo_picking=bool(getattr(effect, 'tremoloPicking', False)) if effect else False,
+            grace_note=bool(getattr(effect, 'grace', False)) if effect else False,
+            grace_note_type=self._get_grace_note_type(effect) if effect else None,
+            
+            # Fingering
+            left_hand_finger=self._get_left_hand_finger(effect) if effect else None,
+            right_hand_finger=self._get_right_hand_finger(effect) if effect else None
         )
     
     def _get_duration_string(self, beat) -> str:
@@ -476,5 +484,129 @@ class ParseTabHandlerImpl(ParseTabHandler):
             g = getattr(color, 'g', 0) 
             b = getattr(color, 'b', 0)
             return f"#{r:02x}{g:02x}{b:02x}"
+        
+        return None
+    
+    def _is_hammer_on(self, effect) -> bool:
+        """Check if note is a hammer-on."""
+        hammer = getattr(effect, 'hammer', None)
+        if not hammer:
+            return False
+        
+        # In guitarpro, hammer-on is typically when origin note is lower than destination
+        origin = getattr(hammer, 'originValue', None)
+        destination = getattr(hammer, 'destinationValue', None)
+        
+        if origin is not None and destination is not None:
+            return destination > origin
+        
+        # Fallback: just check if hammer effect exists
+        return True
+    
+    def _is_pull_off(self, effect) -> bool:
+        """Check if note is a pull-off."""
+        hammer = getattr(effect, 'hammer', None)
+        if not hammer:
+            return False
+        
+        # In guitarpro, pull-off is typically when origin note is higher than destination  
+        origin = getattr(hammer, 'originValue', None)
+        destination = getattr(hammer, 'destinationValue', None)
+        
+        if origin is not None and destination is not None:
+            return destination < origin
+        
+        return False
+    
+    def _get_grace_note_type(self, effect) -> Optional[str]:
+        """Get grace note type."""
+        grace = getattr(effect, 'grace', None)
+        if not grace:
+            return None
+        
+        # Check if grace note is before or on beat
+        is_on_beat = getattr(grace, 'isOnBeat', False)
+        return "on_beat" if is_on_beat else "before_beat"
+    
+    def _get_left_hand_finger(self, effect) -> Optional[int]:
+        """Get left hand finger number."""
+        finger = getattr(effect, 'leftHandFinger', None)
+        if finger is None:
+            return None
+        
+        # Convert finger enum/value to integer (1-4)
+        if hasattr(finger, 'value'):
+            finger_val = getattr(finger, 'value', 0)
+        else:
+            finger_val = finger
+        
+        try:
+            finger_int = int(finger_val)
+            return finger_int if 1 <= finger_int <= 4 else None
+        except (ValueError, TypeError):
+            return None
+    
+    def _get_right_hand_finger(self, effect) -> Optional[str]:
+        """Get right hand finger character."""
+        finger = getattr(effect, 'rightHandFinger', None)
+        if finger is None:
+            return None
+        
+        # Convert finger enum/value to character
+        if hasattr(finger, 'value'):
+            finger_val = getattr(finger, 'value', '')
+        elif hasattr(finger, 'name'):
+            finger_val = getattr(finger, 'name', '')
+        else:
+            finger_val = str(finger)
+        
+        # Map common finger values
+        finger_map = {
+            'thumb': 'p',
+            'index': 'i', 
+            'middle': 'm',
+            'ring': 'a',
+            'little': 'c'
+        }
+        
+        finger_str = str(finger_val).lower()
+        if finger_str in finger_map:
+            return finger_map[finger_str]
+        elif finger_str in ['p', 'i', 'm', 'a', 'c']:
+            return finger_str
+        
+        return None
+    
+    def _get_tuplet_info(self, beat, voice=None) -> Optional[Dict[str, int]]:
+        """Extract tuplet information from beat or voice."""
+        tuplet = None
+        
+        # First try to get tuplet from beat
+        beat_tuplet = getattr(beat, 'tuplet', None)
+        if beat_tuplet:
+            tuplet = beat_tuplet
+        
+        # If no tuplet on beat, try voice level  
+        if not tuplet and voice:
+            voice_tuplet = getattr(voice, 'tuplet', None)
+            if voice_tuplet:
+                tuplet = voice_tuplet
+        
+        # Also check if beat has duration that implies tuplet
+        if not tuplet:
+            duration = getattr(beat, 'duration', None)
+            if duration and hasattr(duration, 'tuplet'):
+                tuplet = getattr(duration, 'tuplet', None)
+        
+        if tuplet:
+            enters = getattr(tuplet, 'enters', 3)
+            times = getattr(tuplet, 'times', 2)
+            
+            # Only return tuplet info if it's not the default 1:1 ratio
+            if enters != 1 or times != 1:
+                return {
+                    'enters': int(enters),
+                    'times': int(times)
+                }
         
         return None

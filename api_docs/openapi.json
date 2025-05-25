@@ -723,6 +723,74 @@
             "title": "Vibrato",
             "description": "Has vibrato",
             "default": false
+          },
+          "hammer_on": {
+            "type": "boolean",
+            "title": "Hammer On",
+            "description": "Is hammer-on",
+            "default": false
+          },
+          "pull_off": {
+            "type": "boolean",
+            "title": "Pull Off",
+            "description": "Is pull-off",
+            "default": false
+          },
+          "trill": {
+            "type": "boolean",
+            "title": "Trill",
+            "description": "Has trill",
+            "default": false
+          },
+          "tremolo_picking": {
+            "type": "boolean",
+            "title": "Tremolo Picking",
+            "description": "Has tremolo picking",
+            "default": false
+          },
+          "grace_note": {
+            "type": "boolean",
+            "title": "Grace Note",
+            "description": "Is grace note",
+            "default": false
+          },
+          "grace_note_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Note Type",
+            "description": "Grace note type (before/on beat)"
+          },
+          "left_hand_finger": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 4.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left Hand Finger",
+            "description": "Left hand finger (1-4)"
+          },
+          "right_hand_finger": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Right Hand Finger",
+            "description": "Right hand finger (p,i,m,a,c)"
           }
         },
         "type": "object",
@@ -737,14 +805,19 @@
           "accent": false,
           "fret": 12,
           "ghost": false,
+          "grace_note": false,
+          "hammer_on": false,
           "harmonic": false,
           "heavy_accent": false,
           "let_ring": false,
           "muted": false,
           "palm_mute": false,
+          "pull_off": false,
           "staccato": false,
           "string": 1,
           "tied": false,
+          "tremolo_picking": false,
+          "trill": false,
           "value": 64,
           "velocity": 95,
           "vibrato": false
