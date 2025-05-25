@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans"
 import { Toaster } from "sonner"
 import { cn } from "@/lib/utils"
 import { Navbar } from "@/components/navbar"
+import { initBackendClient } from "@/integrations/backend"
 
 export const metadata = {
   title: "Guitar Pro Tracks Builder",
@@ -30,6 +31,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  initBackendClient()
   return (
     <html lang="en">
       <head></head>

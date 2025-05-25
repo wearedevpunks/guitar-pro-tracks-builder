@@ -1,7 +1,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useFileUploadStore } from "@/stores/file-upload-store"
-import { createNewSongSongsNewPost, type CreateSongResponse, apiClient } from "@/integrations/backend"
+import {
+  createNewSongSongsNewPost,
+  CreateSongResponse,
+} from "@/integrations/backend/api"
 
 export function useFileUploadLogic() {
   const router = useRouter()
@@ -15,7 +18,6 @@ export function useFileUploadLogic() {
   const uploadFile = async (file: File): Promise<CreateSongResponse> => {
     const response = await createNewSongSongsNewPost({
       body: { file },
-      client: apiClient
     })
 
     if (!response.data) {
@@ -31,7 +33,7 @@ export function useFileUploadLogic() {
     setIsUploading(true)
     try {
       const result = await uploadFile(uploadedFile)
-      
+
       if (result.success && result.song_id) {
         // Store song info for the track page
         localStorage.setItem("currentSongId", result.song_id)
