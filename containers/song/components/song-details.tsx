@@ -19,7 +19,7 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
 
       // Create an AbortController for timeout management
       const controller = new AbortController()
-      
+
       // Set a 10-minute timeout for video export
       const timeoutId = setTimeout(() => {
         controller.abort()
@@ -46,24 +46,25 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
         return response.data
       } catch (error) {
         clearTimeout(timeoutId)
-        
+
         // Handle timeout error specifically
-        if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error("Export operation timed out after 10 minutes. Please try again with a shorter song or contact support.")
+        if (error instanceof Error && error.name === "AbortError") {
+          throw new Error(
+            "Export operation timed out after 10 minutes. Please try again with a shorter song or contact support."
+          )
         }
-        
+
         throw error
       }
     },
-    // Set retry options for failed exports
-    retry: 1,
-    retryDelay: 5000,
     onSuccess: (data) => {
       // Create download link
-      const downloadUrl = `/api/files/${data.video_file!.provider}/${data.video_file!.reference}`
-      
+      const downloadUrl = `/api/files/${data.video_file!.provider}/${
+        data.video_file!.reference
+      }`
+
       // Trigger download
-      const link = document.createElement('a')
+      const link = document.createElement("a")
       link.href = downloadUrl
       link.download = `song-${song.song_id}-export.mp4`
       document.body.appendChild(link)
@@ -71,13 +72,15 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
       document.body.removeChild(link)
 
       // Show success message with details
-      alert(`Export successful! Video duration: ${data.duration_seconds}s with ${data.total_measures} measures.`)
+      alert(
+        `Export successful! Video duration: ${data.duration_seconds}s with ${data.total_measures} measures.`
+      )
       setShowExportDialog(false)
     },
     onError: (error) => {
       console.error("Export failed:", error)
       // Error will be displayed in the dialog, no need for alert here
-    }
+    },
   })
 
   const handleExportSong = () => {

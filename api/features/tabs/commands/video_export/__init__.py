@@ -67,23 +67,40 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 if first_measure.time_signature:
                     time_signature_num = first_measure.time_signature.numerator
             
-            seconds_per_measure = seconds_per_beat * time_signature_num
-            if command.duration_per_measure:
-                seconds_per_measure = command.duration_per_measure
+            # Calculate total video duration with dynamic tempo changes
+            total_duration = 0
+            current_tempo = tempo_bpm
+            
+            for measure in command.parsed_data.measures:
+                # Get tempo for this measure
+                measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
+                measure_time_sig_num = measure.time_signature.numerator if measure.time_signature else time_signature_num
+                
+                # Calculate duration for this measure
+                if command.duration_per_measure:
+                    measure_duration = command.duration_per_measure
+                else:
+                    seconds_per_beat = 60.0 / measure_tempo
+                    measure_duration = seconds_per_beat * measure_time_sig_num
+                
+                total_duration += measure_duration
+                current_tempo = measure_tempo
             
             total_measures = command.parsed_data.measure_count
-            total_duration = seconds_per_measure * total_measures
+            
+            # Calculate average values for logging
+            avg_seconds_per_measure = total_duration / total_measures if total_measures > 0 else 60.0 / tempo_bpm * time_signature_num
             
             self.logger.info(f"Generating video: {total_measures} measures, {tempo_bpm} BPM, {total_duration:.1f}s")
             
-            # Generate video
+            # Generate video with dynamic tempo and time signature handling
             video_path = await self._generate_video(
                 command.parsed_data,
                 command.resolution,
                 command.fps,
-                tempo_bpm,
+                tempo_bpm,  # Initial values for fallback
                 time_signature_num,
-                seconds_per_measure,
+                avg_seconds_per_measure,
                 total_duration
             )
             
@@ -120,12 +137,12 @@ class VideoExportHandlerImpl(VideoExportHandler):
         parsed_data: ParsedTabData,
         resolution: tuple,
         fps: int,
-        tempo_bpm: int,
-        time_signature_num: int,
-        seconds_per_measure: float,
+        initial_tempo_bpm: int,
+        initial_time_signature_num: int,
+        initial_seconds_per_measure: float,
         total_duration: float
     ) -> str:
-        """Generate the actual video file."""
+        """Generate the actual video file with dynamic tempo and time signature changes."""
         
         width, height = resolution
         total_frames = int(total_duration * fps)
@@ -139,18 +156,13 @@ class VideoExportHandlerImpl(VideoExportHandler):
         video_writer = cv2.VideoWriter(temp_video.name, fourcc, fps, (width, height))
         
         try:
-            # Generate metronome audio
-            audio_path = await self._generate_metronome_audio(
-                tempo_bpm, time_signature_num, total_duration
-            )
+            # Generate metronome audio with dynamic tempo changes
+            audio_path = await self._generate_metronome_audio(parsed_data, total_duration)
             
             # Generate video frames
             for frame_num in range(total_frames):
                 current_time = frame_num / fps
-                frame = self._create_frame(
-                    parsed_data, width, height, current_time, 
-                    tempo_bpm, time_signature_num, seconds_per_measure
-                )
+                frame = self._create_frame(parsed_data, width, height, current_time)
                 video_writer.write(frame)
             
             video_writer.release()
@@ -170,26 +182,78 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 os.unlink(temp_video.name)
             raise e
     
+    def _get_tempo_and_time_sig_at_time(self, parsed_data: ParsedTabData, current_time: float) -> tuple:
+        """Get the current tempo and time signature at a specific time in the song."""
+        
+        # Calculate which measure we're in based on cumulative time
+        cumulative_time = 0
+        current_tempo = parsed_data.song_info.tempo  # Default from song
+        current_time_sig_num = 4  # Default to 4/4
+        
+        for measure in parsed_data.measures:
+            # Get tempo and time signature for this measure
+            measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
+            measure_time_sig = measure.time_signature.numerator if measure.time_signature else current_time_sig_num
+            
+            # Calculate duration of this measure
+            seconds_per_beat = 60.0 / measure_tempo
+            seconds_per_measure = seconds_per_beat * measure_time_sig
+            
+            # Check if current_time falls within this measure
+            if current_time <= cumulative_time + seconds_per_measure:
+                return measure_tempo, measure_time_sig
+            
+            # Update for next iteration
+            cumulative_time += seconds_per_measure
+            current_tempo = measure_tempo
+            current_time_sig_num = measure_time_sig
+        
+        # If we're past all measures, return the last known values
+        return current_tempo, current_time_sig_num
+    
+    def _get_current_measure_and_position(self, parsed_data: ParsedTabData, current_time: float) -> tuple:
+        """Get the current measure number and position within that measure."""
+        
+        cumulative_time = 0
+        current_tempo = parsed_data.song_info.tempo
+        
+        for measure in parsed_data.measures:
+            measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
+            measure_time_sig_num = measure.time_signature.numerator if measure.time_signature else 4
+            
+            seconds_per_beat = 60.0 / measure_tempo
+            seconds_per_measure = seconds_per_beat * measure_time_sig_num
+            
+            if current_time <= cumulative_time + seconds_per_measure:
+                # We're in this measure
+                time_in_measure = current_time - cumulative_time
+                beat_position = (time_in_measure / seconds_per_beat) % measure_time_sig_num
+                current_beat = int(beat_position) + 1
+                current_quarter = int(beat_position) + 1  # Same as beat for 4/4
+                
+                return measure.number, current_beat, current_quarter, seconds_per_measure
+            
+            cumulative_time += seconds_per_measure
+            current_tempo = measure_tempo
+        
+        # Default if past all measures
+        return len(parsed_data.measures), 1, 1, 60.0 / current_tempo * 4
+    
     def _create_frame(
         self,
         parsed_data: ParsedTabData,
         width: int,
         height: int,
-        current_time: float,
-        tempo_bpm: int,
-        time_signature_num: int,
-        seconds_per_measure: float
+        current_time: float
     ) -> np.ndarray:
-        """Create a single video frame."""
+        """Create a single video frame with dynamic tempo and time signature."""
         
         # Create black background
         frame = np.zeros((height, width, 3), dtype=np.uint8)
         
-        # Calculate current position
-        current_measure = int(current_time / seconds_per_measure) + 1
-        time_in_measure = current_time % seconds_per_measure
-        current_beat = int(time_in_measure / (seconds_per_measure / time_signature_num)) + 1
-        current_quarter = current_beat  # For 4/4 time, beat = quarter note
+        # Get dynamic tempo and time signature for current time
+        tempo_bpm, time_signature_num = self._get_tempo_and_time_sig_at_time(parsed_data, current_time)
+        current_measure, current_beat, current_quarter, seconds_per_measure = self._get_current_measure_and_position(parsed_data, current_time)
         
         # Get current section name
         current_section = self._get_current_section(parsed_data.measures, current_measure)
@@ -291,16 +355,12 @@ class VideoExportHandlerImpl(VideoExportHandler):
             cv2.putText(frame, str(beat_num), (x-8, indicator_y+8), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     
-    async def _generate_metronome_audio(self, tempo_bpm: int, time_signature_num: int, 
-                                       duration: float) -> str:
-        """Generate metronome audio with emphasis on beat 1."""
+    async def _generate_metronome_audio(self, parsed_data: ParsedTabData, duration: float) -> str:
+        """Generate metronome audio with dynamic tempo changes and emphasis on beat 1."""
         
         sample_rate = 44100
         total_samples = int(duration * sample_rate)
         audio = np.zeros(total_samples)
-        
-        seconds_per_beat = 60.0 / tempo_bpm
-        samples_per_beat = int(seconds_per_beat * sample_rate)
         
         # Generate click sounds
         beat_1_freq = 1000  # Higher pitch for beat 1
@@ -319,16 +379,42 @@ class VideoExportHandlerImpl(VideoExportHandler):
         beat_1_click *= envelope
         other_beat_click *= envelope
         
-        # Place clicks in audio
-        current_beat = 1
-        for sample_idx in range(0, total_samples, samples_per_beat):
-            if sample_idx + click_samples <= total_samples:
-                if current_beat == 1:
-                    audio[sample_idx:sample_idx + click_samples] += beat_1_click
-                else:
-                    audio[sample_idx:sample_idx + click_samples] += other_beat_click
+        # Generate beats by iterating through measures and beats
+        current_time = 0
+        current_tempo = parsed_data.song_info.tempo
+        
+        for measure in parsed_data.measures:
+            # Get tempo and time signature for this measure
+            measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
+            measure_time_sig_num = measure.time_signature.numerator if measure.time_signature else 4
+            
+            # Calculate beat timing for this measure
+            seconds_per_beat = 60.0 / measure_tempo
+            
+            # Generate beats for this measure
+            for beat_num in range(1, measure_time_sig_num + 1):
+                sample_idx = int(current_time * sample_rate)
                 
-                current_beat = (current_beat % time_signature_num) + 1
+                # Add click if within audio bounds
+                if sample_idx + click_samples <= total_samples:
+                    if beat_num == 1:  # Always beat 1 of measure gets high pitch
+                        audio[sample_idx:sample_idx + click_samples] += beat_1_click
+                    else:
+                        audio[sample_idx:sample_idx + click_samples] += other_beat_click
+                
+                # Advance to next beat
+                current_time += seconds_per_beat
+                
+                # Stop if we've exceeded the duration
+                if current_time >= duration:
+                    break
+            
+            # Update current tempo for next measure
+            current_tempo = measure_tempo
+            
+            # Stop if we've exceeded the duration
+            if current_time >= duration:
+                break
         
         # Save audio file
         temp_audio = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
