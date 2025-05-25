@@ -6,7 +6,7 @@ import { getSongByIdApiSongsSongIdGet } from "@/integrations/backend/api"
 import { LoadingSpinner } from "./components/loading-spinner"
 import { ErrorMessage } from "./components/error-message"
 import { SongDetails } from "./components/song-details"
-import { TrackEditor } from "./components/track-editor"
+import { TrackEditorFeature } from "@/features/tracks"
 
 interface SongContainerProps {
   songId: string
@@ -64,7 +64,7 @@ export function SongContainer({ songId }: SongContainerProps) {
 
   if (isEditing) {
     return (
-      <TrackEditor
+      <TrackEditorFeature
         parsedData={(song as any).parsed_data || null}
         onClose={handleCloseEditor}
       />

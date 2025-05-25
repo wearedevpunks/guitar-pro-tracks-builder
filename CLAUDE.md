@@ -105,6 +105,7 @@ pnpm lint      # Run ESLint
 - **Hooks**: Business logic extracted into custom hooks
 - **Separation**: UI components separated from logic components
 - **Reusability**: Granular components can be reused across features
+- When react components becomes too large break down into reusable subcomponents. Use features folder to create reusable components
 
 ## Python API Code Guidelines
 
@@ -240,3 +241,4 @@ async def create_item_action(
 - **Testability**: Actions can be unit tested independently
 - **Maintainability**: Clear organization and single responsibility
 - **Scalability**: Easy to add new actions without cluttering routes
+```
