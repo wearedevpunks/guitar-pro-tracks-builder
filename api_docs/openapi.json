@@ -91,6 +91,48 @@
         }
       }
     },
+    "/api/songs/export-video": {
+      "post": {
+        "tags": [
+          "songs"
+        ],
+        "summary": "Export Song Video",
+        "description": "Export a metronome video for a song.\n\nThis endpoint takes a song ID and export settings, retrieves the song's tab data,\nand generates a metronome video with visual timing cues for band practice.\n\nThe video includes:\n- Large measure counter\n- Current section names (Intro, Verse, Chorus, etc.)\n- Beat indicators with emphasis on beat 1\n- Quarter note counter\n- Visual metronome pendulum\n- Audio metronome with different sounds for beat 1",
+        "operationId": "songExportVideo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoExportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/chat": {
       "post": {
         "tags": [
@@ -1571,6 +1613,165 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VideoExportRequest": {
+        "properties": {
+          "song_id": {
+            "type": "string",
+            "title": "Song Id",
+            "description": "ID of the song to export video for"
+          },
+          "output_format": {
+            "type": "string",
+            "title": "Output Format",
+            "description": "Output video format",
+            "default": "mp4"
+          },
+          "resolution": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Resolution",
+            "description": "Video resolution (width, height)",
+            "default": [
+              1920,
+              1080
+            ]
+          },
+          "fps": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 15.0,
+            "title": "Fps",
+            "description": "Frames per second",
+            "default": 30
+          },
+          "duration_per_measure": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Per Measure",
+            "description": "Override duration per measure in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "song_id"
+        ],
+        "title": "VideoExportRequest",
+        "description": "Request model for video export.",
+        "example": {
+          "fps": 30,
+          "output_format": "mp4",
+          "resolution": [
+            1920,
+            1080
+          ],
+          "song_id": "123e4567-e89b-12d3-a456-426614174000"
+        }
+      },
+      "VideoExportResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the export was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          },
+          "song_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Song Id",
+            "description": "ID of the exported song"
+          },
+          "video_file": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FileReference"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Reference to the exported video file"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "title": "Duration Seconds",
+            "description": "Total video duration in seconds",
+            "default": 0
+          },
+          "total_measures": {
+            "type": "integer",
+            "title": "Total Measures",
+            "description": "Total number of measures in the video",
+            "default": 0
+          },
+          "export_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Export Settings",
+            "description": "Settings used for export"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "VideoExportResponse",
+        "description": "Response model for video export.",
+        "example": {
+          "duration_seconds": 240.5,
+          "export_settings": {
+            "format": "mp4",
+            "fps": 30,
+            "resolution": [
+              1920,
+              1080
+            ],
+            "tempo_bpm": 120
+          },
+          "message": "Video exported successfully",
+          "song_id": "123e4567-e89b-12d3-a456-426614174000",
+          "success": true,
+          "total_measures": 64,
+          "video_file": {
+            "provider": "s3",
+            "reference": "videos/123e4567-e89b-12d3-a456-426614174000/master_of_puppets_metronome.mp4"
+          }
+        }
       }
     }
   }

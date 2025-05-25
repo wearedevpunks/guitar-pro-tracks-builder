@@ -342,7 +342,9 @@ function TrackDetails({ track, trackIndex, parsedData }: TrackDetailsProps) {
         {activeView === "strings" && <StringsView track={track} />}
         {activeView === "measures" && <MeasuresView track={track} />}
         {activeView === "notes" && <NotesView track={track} />}
-        {activeView === "json" && <JsonView track={track} parsedData={parsedData} />}
+        {activeView === "json" && (
+          <JsonView track={track} parsedData={parsedData} />
+        )}
       </div>
     </div>
   )

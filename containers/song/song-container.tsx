@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { getSongByIdApiSongsSongIdGet } from "@/integrations/backend/api"
+import { songGet } from "@/integrations/backend/api"
 import { LoadingSpinner } from "./components/loading-spinner"
 import { ErrorMessage } from "./components/error-message"
 import { SongDetails } from "./components/song-details"
@@ -23,7 +23,7 @@ export function SongContainer({ songId }: SongContainerProps) {
   } = useQuery({
     queryKey: ["song", songId],
     queryFn: async () => {
-      const response = await getSongByIdApiSongsSongIdGet({
+      const response = await songGet({
         path: { song_id: songId },
       })
 

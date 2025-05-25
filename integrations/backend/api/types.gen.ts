@@ -21,17 +21,6 @@ export type ClientMessage = {
 };
 
 /**
- * Response model for song creation.
- */
-export type CreateSongResponse = {
-    success: boolean;
-    message: string;
-    song_id?: string | null;
-    tab_id?: string | null;
-    file_reference?: FileReference | null;
-};
-
-/**
  * Reference to a file stored in a storage provider.
  */
 export type FileReference = {
@@ -45,19 +34,38 @@ export type FileReference = {
     reference: string;
 };
 
-/**
- * Response model for getting a song by ID.
- */
-export type GetSongResponse = {
-    success: boolean;
-    message: string;
-    song_id?: string | null;
-    tab_id?: string | null;
-    file_reference?: FileReference | null;
-};
-
 export type HttpValidationError = {
     detail?: Array<ValidationError>;
+};
+
+/**
+ * Complete parsed tab data ready for frontend editing.
+ */
+export type ParsedTabData = {
+    /**
+     * Song metadata
+     */
+    song_info: SerializableSongInfo;
+    /**
+     * List of tracks
+     */
+    tracks: Array<SerializableTrack>;
+    /**
+     * Total number of measures
+     */
+    measure_count?: number;
+    /**
+     * Song-level measure information with section names
+     */
+    measures?: Array<SerializableMeasureInfo>;
+    /**
+     * Song contains lyrics
+     */
+    has_lyrics?: boolean;
+    /**
+     * Guitar Pro version
+     */
+    version?: string;
 };
 
 /**
@@ -65,6 +73,485 @@ export type HttpValidationError = {
  */
 export type Request = {
     messages: Array<ClientMessage>;
+};
+
+/**
+ * Serializable beat data.
+ */
+export type SerializableBeat = {
+    /**
+     * Voices in this beat
+     */
+    voices?: Array<SerializableVoice>;
+    /**
+     * Start time in ticks
+     */
+    start_time?: number;
+    /**
+     * Beat duration
+     */
+    duration?: string;
+    /**
+     * Beat text or chord annotation
+     */
+    text?: string;
+    /**
+     * Has fade in
+     */
+    fade_in?: boolean;
+    /**
+     * Has fade out
+     */
+    fade_out?: boolean;
+    /**
+     * Has volume swell
+     */
+    volume_swell?: boolean;
+    /**
+     * Has tremolo picking
+     */
+    tremolo_picking?: boolean;
+    /**
+     * Stroke direction (up/down)
+     */
+    stroke_direction?: string | null;
+};
+
+/**
+ * Serializable key signature.
+ */
+export type SerializableKeySignature = {
+    /**
+     * Key signature (-7 to +7)
+     */
+    key?: number;
+    /**
+     * Is minor key
+     */
+    is_minor?: boolean;
+};
+
+/**
+ * Serializable marker data.
+ */
+export type SerializableMarker = {
+    /**
+     * Marker title
+     */
+    title?: string;
+    /**
+     * Marker color (hex)
+     */
+    color?: string | null;
+};
+
+/**
+ * Serializable measure data.
+ */
+export type SerializableMeasure = {
+    /**
+     * Measure number (1-based)
+     */
+    number?: number;
+    /**
+     * Beats in this measure
+     */
+    beats?: Array<SerializableBeat>;
+    /**
+     * Time signature (if changed)
+     */
+    time_signature?: SerializableTimeSignature | null;
+    /**
+     * Key signature (if changed)
+     */
+    key_signature?: SerializableKeySignature | null;
+    /**
+     * Marker at this measure
+     */
+    marker?: SerializableMarker | null;
+    /**
+     * Tempo change in BPM (if changed at this measure)
+     */
+    tempo_change?: number | null;
+    /**
+     * Is repeat open
+     */
+    repeat_open?: boolean;
+    /**
+     * Repeat close count (0 = no repeat)
+     */
+    repeat_close?: number;
+    /**
+     * Alternative ending number (0 = no alternative)
+     */
+    repeat_alternative?: number;
+    /**
+     * Has double bar line
+     */
+    double_bar?: boolean;
+};
+
+/**
+ * Song-level measure information with section names and repetitions.
+ */
+export type SerializableMeasureInfo = {
+    /**
+     * Measure number (1-based)
+     */
+    number: number;
+    /**
+     * Section name from first track beat text
+     */
+    section_name?: string;
+    /**
+     * Has repeat start marker
+     */
+    repeat_open?: boolean;
+    /**
+     * Repeat end count (0 = no repeat end)
+     */
+    repeat_close?: number;
+    /**
+     * Alternative ending number (0 = no alternative)
+     */
+    repeat_alternative?: number;
+    /**
+     * Has double bar line
+     */
+    double_bar?: boolean;
+};
+
+/**
+ * Serializable note data.
+ */
+export type SerializableNote = {
+    /**
+     * String number (1-based)
+     */
+    string: number;
+    /**
+     * Fret number
+     */
+    fret: number;
+    /**
+     * MIDI note value
+     */
+    value: number;
+    /**
+     * Note velocity (0-127)
+     */
+    velocity?: number;
+    /**
+     * Is note tied
+     */
+    tied?: boolean;
+    /**
+     * Is note muted
+     */
+    muted?: boolean;
+    /**
+     * Is ghost note
+     */
+    ghost?: boolean;
+    /**
+     * Has accent
+     */
+    accent?: boolean;
+    /**
+     * Has heavy accent
+     */
+    heavy_accent?: boolean;
+    /**
+     * Is harmonic
+     */
+    harmonic?: boolean;
+    /**
+     * Has palm mute
+     */
+    palm_mute?: boolean;
+    /**
+     * Is staccato
+     */
+    staccato?: boolean;
+    /**
+     * Let ring
+     */
+    let_ring?: boolean;
+    /**
+     * Bend value in semitones
+     */
+    bend_value?: number | null;
+    /**
+     * Slide type
+     */
+    slide_type?: string | null;
+    /**
+     * Has vibrato
+     */
+    vibrato?: boolean;
+    /**
+     * Is hammer-on
+     */
+    hammer_on?: boolean;
+    /**
+     * Is pull-off
+     */
+    pull_off?: boolean;
+    /**
+     * Has trill
+     */
+    trill?: boolean;
+    /**
+     * Has tremolo picking
+     */
+    tremolo_picking?: boolean;
+    /**
+     * Is grace note
+     */
+    grace_note?: boolean;
+    /**
+     * Grace note type (before/on beat)
+     */
+    grace_note_type?: string | null;
+    /**
+     * Left hand finger (1-4)
+     */
+    left_hand_finger?: number | null;
+    /**
+     * Right hand finger (p,i,m,a,c)
+     */
+    right_hand_finger?: string | null;
+};
+
+/**
+ * Serializable song metadata.
+ */
+export type SerializableSongInfo = {
+    /**
+     * Song title
+     */
+    title?: string;
+    /**
+     * Song subtitle
+     */
+    subtitle?: string;
+    /**
+     * Artist name
+     */
+    artist?: string;
+    /**
+     * Album name
+     */
+    album?: string;
+    /**
+     * Music composer
+     */
+    music?: string;
+    /**
+     * Lyrics author
+     */
+    words?: string;
+    /**
+     * Copyright notice
+     */
+    copyright?: string;
+    /**
+     * Tab author
+     */
+    tab?: string;
+    /**
+     * Performance instructions
+     */
+    instructions?: string;
+    /**
+     * Notice text
+     */
+    notice?: string;
+    /**
+     * Tempo in BPM
+     */
+    tempo?: number;
+    /**
+     * Tempo marking name
+     */
+    tempo_name?: string;
+    /**
+     * Hide tempo from display
+     */
+    hide_tempo?: boolean;
+};
+
+/**
+ * Serializable guitar string tuning.
+ */
+export type SerializableStringTuning = {
+    /**
+     * String number (1-8)
+     */
+    string_number: number;
+    /**
+     * MIDI note value
+     */
+    value: number;
+};
+
+/**
+ * Serializable time signature.
+ */
+export type SerializableTimeSignature = {
+    /**
+     * Time signature numerator
+     */
+    numerator?: number;
+    /**
+     * Time signature denominator
+     */
+    denominator?: number;
+};
+
+/**
+ * Serializable track data for frontend editing.
+ */
+export type SerializableTrack = {
+    /**
+     * Track name
+     */
+    name: string;
+    /**
+     * Track index in song
+     */
+    index: number;
+    /**
+     * Track settings
+     */
+    settings: SerializableTrackSettings;
+    /**
+     * Instrument name
+     */
+    instrument?: string;
+    /**
+     * Number of strings
+     */
+    string_count?: number;
+    /**
+     * String tuning
+     */
+    tuning?: Array<SerializableStringTuning>;
+    /**
+     * Measures in this track
+     */
+    measures?: Array<SerializableMeasure>;
+    /**
+     * Number of measures in track
+     */
+    measure_count?: number;
+    /**
+     * Additional metadata
+     */
+    metadata?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * Serializable track settings for frontend editing.
+ */
+export type SerializableTrackSettings = {
+    /**
+     * Track name
+     */
+    name: string;
+    /**
+     * Track color (hex)
+     */
+    color?: string | null;
+    /**
+     * Is 12-stringed guitar
+     */
+    is_12_stringed?: boolean;
+    /**
+     * Is acoustic guitar
+     */
+    is_acoustic?: boolean;
+    /**
+     * Is bass guitar
+     */
+    is_bass?: boolean;
+    /**
+     * Is drum track
+     */
+    is_drums?: boolean;
+    /**
+     * Is track muted
+     */
+    is_muted?: boolean;
+    /**
+     * Is track solo
+     */
+    is_solo?: boolean;
+    /**
+     * Is track visible
+     */
+    is_visible?: boolean;
+    /**
+     * Track volume (0-127)
+     */
+    volume?: number;
+    /**
+     * Track pan (0-127)
+     */
+    pan?: number;
+    /**
+     * MIDI channel
+     */
+    channel?: number;
+};
+
+/**
+ * Serializable voice data.
+ */
+export type SerializableVoice = {
+    /**
+     * Notes in this voice
+     */
+    notes?: Array<SerializableNote>;
+    /**
+     * Note duration (whole, half, quarter, eighth, sixteenth, etc.)
+     */
+    duration?: string;
+    /**
+     * Tuplet information (enters, times)
+     */
+    tuplet?: {
+        [key: string]: number;
+    } | null;
+    /**
+     * Is this voice a rest
+     */
+    is_rest?: boolean;
+};
+
+/**
+ * Response model for song creation.
+ */
+export type SongCreateResponse = {
+    success: boolean;
+    message: string;
+    song_id?: string | null;
+    tab_id?: string | null;
+    file_reference?: FileReference | null;
+};
+
+/**
+ * Response model for getting a song by ID.
+ */
+export type SongGetResponse = {
+    success: boolean;
+    message: string;
+    song_id?: string | null;
+    tab_id?: string | null;
+    file_reference?: FileReference | null;
+    parsed_data?: ParsedTabData | null;
 };
 
 export type ToolInvocation = {
@@ -81,6 +568,71 @@ export type ValidationError = {
     loc: Array<string | number>;
     msg: string;
     type: string;
+};
+
+/**
+ * Request model for video export.
+ */
+export type VideoExportRequest = {
+    /**
+     * ID of the song to export video for
+     */
+    song_id: string;
+    /**
+     * Output video format
+     */
+    output_format?: string;
+    /**
+     * Video resolution (width, height)
+     */
+    resolution?: [
+        number,
+        number
+    ];
+    /**
+     * Frames per second
+     */
+    fps?: number;
+    /**
+     * Override duration per measure in seconds
+     */
+    duration_per_measure?: number | null;
+};
+
+/**
+ * Response model for video export.
+ */
+export type VideoExportResponse = {
+    /**
+     * Whether the export was successful
+     */
+    success: boolean;
+    /**
+     * Response message
+     */
+    message: string;
+    /**
+     * ID of the exported song
+     */
+    song_id?: string | null;
+    /**
+     * Reference to the exported video file
+     */
+    video_file?: FileReference | null;
+    /**
+     * Total video duration in seconds
+     */
+    duration_seconds?: number;
+    /**
+     * Total number of measures in the video
+     */
+    total_measures?: number;
+    /**
+     * Settings used for export
+     */
+    export_settings?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type SongCreateData = {
@@ -103,12 +655,12 @@ export type SongCreateResponses = {
     /**
      * Successful Response
      */
-    200: CreateSongResponse;
+    200: SongCreateResponse;
 };
 
-export type SongCreateResponse = SongCreateResponses[keyof SongCreateResponses];
+export type SongCreateResponse2 = SongCreateResponses[keyof SongCreateResponses];
 
-export type GetSongByIdApiSongsSongIdGetData = {
+export type SongGetData = {
     body?: never;
     path: {
         song_id: string;
@@ -117,23 +669,48 @@ export type GetSongByIdApiSongsSongIdGetData = {
     url: '/api/songs/{song_id}';
 };
 
-export type GetSongByIdApiSongsSongIdGetErrors = {
+export type SongGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetSongByIdApiSongsSongIdGetError = GetSongByIdApiSongsSongIdGetErrors[keyof GetSongByIdApiSongsSongIdGetErrors];
+export type SongGetError = SongGetErrors[keyof SongGetErrors];
 
-export type GetSongByIdApiSongsSongIdGetResponses = {
+export type SongGetResponses = {
     /**
      * Successful Response
      */
-    200: GetSongResponse;
+    200: SongGetResponse;
 };
 
-export type GetSongByIdApiSongsSongIdGetResponse = GetSongByIdApiSongsSongIdGetResponses[keyof GetSongByIdApiSongsSongIdGetResponses];
+export type SongGetResponse2 = SongGetResponses[keyof SongGetResponses];
+
+export type SongExportVideoData = {
+    body: VideoExportRequest;
+    path?: never;
+    query?: never;
+    url: '/api/songs/export-video';
+};
+
+export type SongExportVideoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SongExportVideoError = SongExportVideoErrors[keyof SongExportVideoErrors];
+
+export type SongExportVideoResponses = {
+    /**
+     * Successful Response
+     */
+    200: VideoExportResponse;
+};
+
+export type SongExportVideoResponse = SongExportVideoResponses[keyof SongExportVideoResponses];
 
 export type HandleChatDataApiChatPostData = {
     body: Request;

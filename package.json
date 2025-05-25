@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "api:codegen": "openapi-ts -i ./api/api_docs/openapi.json -o integrations/backend/api -c @hey-api/client-fetch"
+    "api:codegen": "openapi-ts -i ./api_docs/openapi.json -o integrations/backend/api -c @hey-api/client-fetch"
   },
   "dependencies": {
     "@ai-sdk/ui-utils": "^0.0.20",

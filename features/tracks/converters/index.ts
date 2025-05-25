@@ -1,1 +1,1 @@
-export { midiToNoteName, noteNameToMidi } from './midi-converter'
+export { midiToNoteName, noteNameToMidi } from "./midi-converter"
