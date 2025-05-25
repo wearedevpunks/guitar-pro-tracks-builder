@@ -44,15 +44,38 @@ export function StringsView({ track }: StringsViewProps) {
       measure.beats?.forEach((beat: any) => {
         for (let s = 0; s < stringCount; s++) {
           const stringNumber = s + 1
-          const note = beat.notes?.find((n: any) => n.string === stringNumber)
-          if (note) {
+          
+          // Find note in any voice for this string
+          let foundNote = null
+          if (beat.voices && Array.isArray(beat.voices)) {
+            for (const voice of beat.voices) {
+              if (voice.notes && Array.isArray(voice.notes)) {
+                foundNote = voice.notes.find((n: any) => n.string === stringNumber)
+                if (foundNote) break
+              }
+            }
+          }
+          
+          if (foundNote) {
             lines[s].push({
-              fret: note.fret,
-              technique: note.technique || note.effect || note.articulation,
-              duration: beat.duration || note.duration,
-              legato: note.legato || false,
-              accent: note.accent || note.accentuated || false,
-              velocity: note.velocity || beat.velocity
+              fret: foundNote.fret,
+              technique: foundNote.technique || foundNote.effect || foundNote.articulation,
+              duration: beat.duration || foundNote.duration,
+              legato: foundNote.legato || false,
+              accent: foundNote.accent || false,
+              heavy_accent: foundNote.heavy_accent || false,
+              velocity: foundNote.velocity,
+              muted: foundNote.muted || false,
+              ghost: foundNote.ghost || false,
+              harmonic: foundNote.harmonic || false,
+              palm_mute: foundNote.palm_mute || false,
+              staccato: foundNote.staccato || false,
+              let_ring: foundNote.let_ring || false,
+              vibrato: foundNote.vibrato || false,
+              tied: foundNote.tied || false,
+              bend_value: foundNote.bend_value,
+              slide_type: foundNote.slide_type,
+              value: foundNote.value
             })
           } else {
             lines[s].push({ 

@@ -8,7 +8,19 @@ export interface TabNote {
   duration?: string // "quarter", "eighth", "half", etc.
   legato?: boolean
   accent?: boolean
+  heavy_accent?: boolean
   velocity?: number
+  muted?: boolean
+  ghost?: boolean
+  harmonic?: boolean
+  palm_mute?: boolean
+  staccato?: boolean
+  let_ring?: boolean
+  vibrato?: boolean
+  tied?: boolean
+  bend_value?: number | null
+  slide_type?: string | null
+  value?: number // MIDI note value
 }
 
 interface TablatureViewProps {
@@ -16,15 +28,13 @@ interface TablatureViewProps {
   tabLines: TabNote[][] // Array of tab lines, one per string
   tempo?: number
   timeSignature?: string
-  wrapRows?: boolean // Whether to wrap to new rows
 }
 
 export function TablatureView({
   stringMidiValues,
   tabLines,
   tempo,
-  timeSignature,
-  wrapRows = false
+  timeSignature
 }: TablatureViewProps) {
   const [viewMode, setViewMode] = useState<'horizontal' | 'wrapped'>('horizontal')
   const [measuresPerRow, setMeasuresPerRow] = useState(4)
@@ -42,7 +52,7 @@ export function TablatureView({
     })
   }
 
-  const renderTabNote = (note: TabNote, index: number) => {
+  const renderTabNote = (note: TabNote, index: string) => {
     if (note.isMeasureSeparator) {
       return (
         <div key={index} className="flex items-center px-1">
@@ -52,6 +62,31 @@ export function TablatureView({
     }
 
     const isPlayed = note.fret !== "-" && note.fret !== ""
+    
+    // Determine note color based on properties
+    const getNoteColor = () => {
+      if (note.muted) return 'bg-gray-500'
+      if (note.ghost) return 'bg-gray-400 opacity-60'
+      if (note.harmonic) return 'bg-yellow-500'
+      if (note.palm_mute) return 'bg-orange-500'
+      if (note.let_ring) return 'bg-green-500'
+      if (note.tied) return 'bg-purple-500'
+      return 'bg-blue-500'
+    }
+    
+    // Build technique display
+    const getTechniques = () => {
+      const techniques: string[] = []
+      if (note.palm_mute) techniques.push('P.M.')
+      if (note.harmonic) techniques.push('H')
+      if (note.staccato) techniques.push('.')
+      if (note.let_ring) techniques.push('L.R.')
+      if (note.vibrato) techniques.push('~')
+      if (note.bend_value) techniques.push(`B${note.bend_value}`)
+      if (note.slide_type) techniques.push('S')
+      if (note.technique) techniques.push(note.technique)
+      return techniques.join(' ')
+    }
     
     return (
       <div key={index} className="relative flex items-center justify-center min-w-[32px] h-12">
@@ -63,26 +98,39 @@ export function TablatureView({
           <div className="relative z-10 group">
             {/* Fret number */}
             <div className={`
-              bg-blue-500 text-white text-xs font-mono rounded-full w-6 h-6 
-              flex items-center justify-center relative z-20
+              ${getNoteColor()} text-white text-xs font-mono rounded-full w-6 h-6 
+              flex items-center justify-center relative z-20 transition-all
               ${note.accent ? 'ring-2 ring-red-400' : ''}
-              ${note.legato ? 'bg-green-500' : ''}
+              ${note.heavy_accent ? 'ring-2 ring-red-600 ring-offset-1' : ''}
+              ${note.ghost ? 'opacity-60' : ''}
             `}>
               {note.fret}
             </div>
             
-            {/* Technique marker */}
-            {note.technique && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-xs font-mono text-purple-600 dark:text-purple-400 whitespace-nowrap">
-                {note.technique}
+            {/* Technique markers */}
+            {getTechniques() && (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs font-mono text-purple-600 dark:text-purple-400 whitespace-nowrap bg-white dark:bg-gray-800 px-1 rounded">
+                {getTechniques()}
               </div>
             )}
             
             {/* Duration marker */}
             {note.duration && (
-              <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
                 {getDurationSymbol(note.duration)}
               </div>
+            )}
+            
+            {/* Velocity indicator */}
+            {note.velocity && note.velocity !== 79 && (
+              <div className="absolute -right-2 -top-1 text-xs text-gray-400 font-mono">
+                {note.velocity}
+              </div>
+            )}
+            
+            {/* Special effects indicators */}
+            {note.tied && (
+              <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 text-purple-600">⌐</div>
             )}
           </div>
         ) : (
@@ -153,7 +201,7 @@ export function TablatureView({
                 {/* Tab notes */}
                 <div className="flex items-center">
                   {tabLines[stringIndex]?.map((note, noteIndex) => 
-                    renderTabNote(note, noteIndex)
+                    renderTabNote(note, `horizontal-${stringIndex}-${noteIndex}`)
                   )}
                 </div>
               </div>
@@ -251,7 +299,7 @@ export function TablatureView({
                     {/* Tab notes for this row */}
                     <div className="flex items-center">
                       {row[stringIndex]?.map((note, noteIndex) => 
-                        renderTabNote(note, `${rowIndex}-${noteIndex}`)
+                        renderTabNote(note, `${rowIndex}-${stringIndex}-${noteIndex}`)
                       )}
                     </div>
                   </div>
@@ -266,7 +314,7 @@ export function TablatureView({
                       const measuresInThisRow: number[] = []
                       let measureCount = 0
                       
-                      row[0]?.forEach((note, noteIndex) => {
+                      row[0]?.forEach((note) => {
                         if (note.isMeasureSeparator) {
                           measureCount++
                           measuresInThisRow.push(rowIndex * measuresPerRow + measureCount)
