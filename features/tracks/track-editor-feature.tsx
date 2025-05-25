@@ -3,6 +3,7 @@ import { StringsView } from "./components/strings-view"
 import { MeasuresView } from "./components/measures-view"
 import { NotesView } from "./components/notes-view"
 import { JsonView } from "./components/json-view"
+import { midiToNoteName } from "./converters"
 
 export type VisualizationType = 'measures' | 'strings' | 'notes' | 'json'
 
@@ -172,6 +173,12 @@ interface TrackDetailsProps {
   trackIndex: number
 }
 
+interface TuningInfo {
+  stringNumber: number
+  note: string
+  midiValue: number
+}
+
 function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
   const [activeView, setActiveView] = useState<VisualizationType>('strings')
 
@@ -182,17 +189,60 @@ function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
     { id: 'json' as const, label: 'JSON', icon: '📋' }
   ]
 
+  // Get tuning from track data or use default
+  const getTuningInfo = (): TuningInfo[] => {
+    if (track.tuning && Array.isArray(track.tuning)) {
+      return track.tuning.map((tuning: any) => ({
+        stringNumber: tuning.string_number,
+        note: midiToNoteName(tuning.value),
+        midiValue: tuning.value
+      }))
+    }
+    return []
+  }
+
+  const tuningInfo = getTuningInfo()
+  const stringCount = track.strings || track.string_count || 6
+
   return (
     <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           {track.name || `Track ${trackIndex + 1}`}
         </h2>
-        <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <span>Instrument: {track.instrument || 'Unknown'}</span>
-          <span>Strings: {track.strings || 'N/A'}</span>
-          <span>Channel: {track.channel || 'N/A'}</span>
-          <span>Notes: {track.noteCount || 'N/A'}</span>
+        {/* Instrument and Tuning Info */}
+        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-wrap gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 dark:text-gray-400">Instrument:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{track.instrument || 'Unknown'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 dark:text-gray-400">Strings:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{stringCount}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 dark:text-gray-400">Channel:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{track.channel || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 dark:text-gray-400">Notes:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{track.noteCount || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+          {tuningInfo.length > 0 && (
+            <div className="text-xs text-gray-600 dark:text-gray-400">
+              <span className="font-medium">Tuning: </span>
+              {tuningInfo.map((tuning: TuningInfo, index: number) => (
+                <span key={tuning.stringNumber} className="mr-3">
+                  String {tuning.stringNumber}: {tuning.note}
+                  {index < tuningInfo.length - 1 && ' •'}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

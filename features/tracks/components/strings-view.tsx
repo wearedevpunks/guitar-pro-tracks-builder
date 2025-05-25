@@ -43,27 +43,6 @@ export function StringsView({ track }: StringsViewProps) {
           Strings Tablature View
         </h3>
 
-        {/* Instrument and Tuning Info */}
-        <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-              Instrument: {track.instrument || "Unknown"}
-            </h4>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {stringCount} strings
-            </span>
-          </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">
-            <span className="font-medium">Tuning: </span>
-            {tuningInfo.map((tuning: TuningInfo, index: number) => (
-              <span key={tuning.stringNumber} className="mr-2">
-                String {tuning.stringNumber}: {tuning.note}
-                {index < tuningInfo.length - 1 && " •"}
-              </span>
-            ))}
-          </div>
-        </div>
-
         <div className="overflow-x-auto">
           <div className="min-w-max">
             {/* String lines */}
