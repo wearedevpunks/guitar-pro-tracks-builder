@@ -60,7 +60,8 @@ async def export_song_video_action(
         export_kwargs = {
             "output_format": request.output_format,
             "resolution": request.resolution,
-            "fps": request.fps
+            "fps": request.fps,
+            "count_in_measures": request.count_in_measures
         }
         
         if request.duration_per_measure:
@@ -88,7 +89,8 @@ async def export_song_video_action(
             "tempo_bpm": parse_result.parsed_data.song_info.tempo,
             "format": request.output_format,
             "song_title": parse_result.parsed_data.song_info.title,
-            "total_measures": parse_result.parsed_data.measure_count
+            "total_measures": parse_result.parsed_data.measure_count,
+            "count_in_measures": request.count_in_measures
         }
         
         if request.duration_per_measure:

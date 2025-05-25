@@ -81,6 +81,7 @@ class VideoExportRequest(BaseModel):
     resolution: Tuple[int, int] = Field((1920, 1080), description="Video resolution (width, height)")
     fps: int = Field(30, description="Frames per second", ge=15, le=60)
     duration_per_measure: Optional[float] = Field(None, description="Override duration per measure in seconds", gt=0)
+    count_in_measures: int = Field(0, description="Number of count-in measures before the song starts", ge=0, le=8)
     
     class Config:
         json_schema_extra = {
@@ -89,7 +90,8 @@ class VideoExportRequest(BaseModel):
                 "output_format": "mp4",
                 "resolution": [1920, 1080],
                 "fps": 30,
-                "duration_per_measure": None
+                "duration_per_measure": None,
+                "count_in_measures": 2
             }
         }
 

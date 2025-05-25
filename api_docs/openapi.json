@@ -1694,6 +1694,14 @@
             ],
             "title": "Duration Per Measure",
             "description": "Override duration per measure in seconds"
+          },
+          "count_in_measures": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 0.0,
+            "title": "Count In Measures",
+            "description": "Number of count-in measures before the song starts",
+            "default": 0
           }
         },
         "type": "object",
@@ -1703,6 +1711,7 @@
         "title": "VideoExportRequest",
         "description": "Request model for video export.",
         "example": {
+          "count_in_measures": 2,
           "fps": 30,
           "output_format": "mp4",
           "resolution": [

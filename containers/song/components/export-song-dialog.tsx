@@ -4,6 +4,8 @@ interface ExportSongDialogProps {
   song: SongGetResponse
   isOpen: boolean
   isExporting: boolean
+  countInMeasures: number
+  onCountInMeasuresChange: (value: number) => void
   onClose: () => void
   onConfirm: () => void
   error?: Error | null
@@ -13,6 +15,8 @@ export function ExportSongDialog({
   song,
   isOpen,
   isExporting,
+  countInMeasures,
+  onCountInMeasuresChange,
   onClose,
   onConfirm,
   error,
@@ -59,6 +63,27 @@ export function ExportSongDialog({
                   <strong>Tab ID:</strong> {song.tab_id}
                 </div>
               )}
+            </div>
+
+            {/* Export Settings */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Count-in Measures
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min="0"
+                  max="8"
+                  value={countInMeasures}
+                  onChange={(e) => onCountInMeasuresChange(parseInt(e.target.value) || 0)}
+                  disabled={isExporting}
+                  className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  measures of metronome before the song starts
+                </span>
+              </div>
             </div>
 
             {/* Error Display */}

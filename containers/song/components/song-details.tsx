@@ -10,6 +10,7 @@ interface SongDetailsProps {
 
 export function SongDetails({ song, onEditSong }: SongDetailsProps) {
   const [showExportDialog, setShowExportDialog] = useState(false)
+  const [countInMeasures, setCountInMeasures] = useState(2)
 
   const exportVideoMutation = useMutation({
     mutationFn: async () => {
@@ -32,6 +33,7 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
             output_format: "mp4",
             resolution: [1920, 1080],
             fps: 30,
+            count_in_measures: countInMeasures,
           },
           // Pass the abort signal to the fetch request
           signal: controller.signal,
@@ -172,6 +174,8 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
         song={song}
         isOpen={showExportDialog}
         isExporting={exportVideoMutation.isPending}
+        countInMeasures={countInMeasures}
+        onCountInMeasuresChange={setCountInMeasures}
         onClose={() => setShowExportDialog(false)}
         onConfirm={handleExportSong}
         error={exportVideoMutation.error}

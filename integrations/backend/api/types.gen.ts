@@ -204,6 +204,14 @@ export type SerializableMeasureInfo = {
      */
     section_name?: string;
     /**
+     * Current tempo BPM at this measure
+     */
+    tempo_bpm?: number | null;
+    /**
+     * Current time signature at this measure
+     */
+    time_signature?: SerializableTimeSignature | null;
+    /**
      * Has repeat start marker
      */
     repeat_open?: boolean;

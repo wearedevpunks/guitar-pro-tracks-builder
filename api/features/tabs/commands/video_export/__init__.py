@@ -24,6 +24,7 @@ class VideoExportCommand(BaseModel):
     resolution: tuple = Field((1920, 1080), description="Video resolution (width, height)")
     fps: int = Field(30, description="Frames per second")
     duration_per_measure: Optional[float] = Field(None, description="Override duration per measure in seconds")
+    count_in_measures: int = Field(0, description="Number of count-in measures before the song starts")
 
 
 class VideoExportResult(BaseModel):
@@ -67,10 +68,20 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 if first_measure.time_signature:
                     time_signature_num = first_measure.time_signature.numerator
             
-            # Calculate total video duration with dynamic tempo changes
+            # Calculate total video duration with dynamic tempo changes including count-in
             total_duration = 0
             current_tempo = tempo_bpm
             
+            # Add count-in duration first
+            if command.count_in_measures > 0:
+                if command.duration_per_measure:
+                    count_in_duration = command.duration_per_measure * command.count_in_measures
+                else:
+                    seconds_per_beat = 60.0 / current_tempo
+                    count_in_duration = seconds_per_beat * time_signature_num * command.count_in_measures
+                total_duration += count_in_duration
+            
+            # Add song measures duration
             for measure in command.parsed_data.measures:
                 # Get tempo for this measure
                 measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
@@ -86,7 +97,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 total_duration += measure_duration
                 current_tempo = measure_tempo
             
-            total_measures = command.parsed_data.measure_count
+            total_measures = command.parsed_data.measure_count + command.count_in_measures
             
             # Calculate average values for logging
             avg_seconds_per_measure = total_duration / total_measures if total_measures > 0 else 60.0 / tempo_bpm * time_signature_num
@@ -101,7 +112,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 tempo_bpm,  # Initial values for fallback
                 time_signature_num,
                 avg_seconds_per_measure,
-                total_duration
+                total_duration,
+                command.count_in_measures
             )
             
             # Store the video file with timestamp in songs folder
@@ -140,7 +152,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
         initial_tempo_bpm: int,
         initial_time_signature_num: int,
         initial_seconds_per_measure: float,
-        total_duration: float
+        total_duration: float,
+        count_in_measures: int = 0
     ) -> str:
         """Generate the actual video file with dynamic tempo and time signature changes."""
         
@@ -157,12 +170,12 @@ class VideoExportHandlerImpl(VideoExportHandler):
         
         try:
             # Generate metronome audio with dynamic tempo changes
-            audio_path = await self._generate_metronome_audio(parsed_data, total_duration)
+            audio_path = await self._generate_metronome_audio(parsed_data, total_duration, count_in_measures)
             
             # Generate video frames
             for frame_num in range(total_frames):
                 current_time = frame_num / fps
-                frame = self._create_frame(parsed_data, width, height, current_time)
+                frame = self._create_frame(parsed_data, width, height, current_time, count_in_measures)
                 video_writer.write(frame)
             
             video_writer.release()
@@ -182,13 +195,25 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 os.unlink(temp_video.name)
             raise e
     
-    def _get_tempo_and_time_sig_at_time(self, parsed_data: ParsedTabData, current_time: float) -> tuple:
+    def _get_tempo_and_time_sig_at_time(self, parsed_data: ParsedTabData, current_time: float, count_in_measures: int = 0) -> tuple:
         """Get the current tempo and time signature at a specific time in the song."""
         
-        # Calculate which measure we're in based on cumulative time
-        cumulative_time = 0
         current_tempo = parsed_data.song_info.tempo  # Default from song
         current_time_sig_num = 4  # Default to 4/4
+        
+        # Calculate count-in duration
+        count_in_duration = 0
+        if count_in_measures > 0:
+            seconds_per_beat = 60.0 / current_tempo
+            count_in_duration = seconds_per_beat * current_time_sig_num * count_in_measures
+        
+        # If we're still in count-in phase, return initial values
+        if current_time < count_in_duration:
+            return current_tempo, current_time_sig_num
+        
+        # Calculate which measure we're in based on cumulative time (after count-in)
+        cumulative_time = count_in_duration
+        adjusted_time = current_time
         
         for measure in parsed_data.measures:
             # Get tempo and time signature for this measure
@@ -200,7 +225,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
             seconds_per_measure = seconds_per_beat * measure_time_sig
             
             # Check if current_time falls within this measure
-            if current_time <= cumulative_time + seconds_per_measure:
+            if adjusted_time <= cumulative_time + seconds_per_measure:
                 return measure_tempo, measure_time_sig
             
             # Update for next iteration
@@ -211,11 +236,33 @@ class VideoExportHandlerImpl(VideoExportHandler):
         # If we're past all measures, return the last known values
         return current_tempo, current_time_sig_num
     
-    def _get_current_measure_and_position(self, parsed_data: ParsedTabData, current_time: float) -> tuple:
+    def _get_current_measure_and_position(self, parsed_data: ParsedTabData, current_time: float, count_in_measures: int = 0) -> tuple:
         """Get the current measure number and position within that measure."""
         
-        cumulative_time = 0
         current_tempo = parsed_data.song_info.tempo
+        
+        # Calculate count-in duration
+        count_in_duration = 0
+        if count_in_measures > 0:
+            seconds_per_beat = 60.0 / current_tempo
+            count_in_duration = seconds_per_beat * 4 * count_in_measures  # Assume 4/4 for count-in
+        
+        # If we're in count-in phase
+        if current_time < count_in_duration:
+            seconds_per_beat = 60.0 / current_tempo
+            seconds_per_measure = seconds_per_beat * 4  # Assume 4/4 for count-in
+            count_in_measure = int(current_time / seconds_per_measure) + 1
+            
+            time_in_measure = current_time % seconds_per_measure
+            beat_position = time_in_measure / seconds_per_beat
+            current_beat = int(beat_position) + 1
+            current_quarter = int(beat_position) + 1
+            
+            # Return negative measure number to indicate count-in
+            return -count_in_measure, current_beat, current_quarter, seconds_per_measure
+        
+        # We're in the actual song measures
+        cumulative_time = count_in_duration
         
         for measure in parsed_data.measures:
             measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
@@ -244,7 +291,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
         parsed_data: ParsedTabData,
         width: int,
         height: int,
-        current_time: float
+        current_time: float,
+        count_in_measures: int = 0
     ) -> np.ndarray:
         """Create a single video frame with dynamic tempo and time signature."""
         
@@ -252,17 +300,15 @@ class VideoExportHandlerImpl(VideoExportHandler):
         frame = np.zeros((height, width, 3), dtype=np.uint8)
         
         # Get dynamic tempo and time signature for current time
-        tempo_bpm, time_signature_num = self._get_tempo_and_time_sig_at_time(parsed_data, current_time)
-        current_measure, current_beat, current_quarter, seconds_per_measure = self._get_current_measure_and_position(parsed_data, current_time)
-        
-        # Get current section name
-        current_section = self._get_current_section(parsed_data.measures, current_measure)
+        tempo_bpm, time_signature_num = self._get_tempo_and_time_sig_at_time(parsed_data, current_time, count_in_measures)
+        current_measure, current_beat, current_quarter, seconds_per_measure = self._get_current_measure_and_position(parsed_data, current_time, count_in_measures)
         
         # Define colors
         white = (255, 255, 255)
         green = (0, 255, 0)
         red = (0, 0, 255)
         yellow = (0, 255, 255)
+        orange = (0, 165, 255)  # For count-in
         
         # Font settings
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -277,15 +323,42 @@ class VideoExportHandlerImpl(VideoExportHandler):
         cv2.putText(frame, tempo_text, (50, height - 50), 
                    font, 1, white, 2, cv2.LINE_AA)
         
-        # Current measure (large, centered)
-        measure_text = f"Measure {current_measure}"
-        cv2.putText(frame, measure_text, (width//2 - 150, height//2 - 100), 
-                   font, 3, green, 4, cv2.LINE_AA)
-        
-        # Current section
-        section_text = f"Section: {current_section}"
-        cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 20), 
-                   font, 2, yellow, 3, cv2.LINE_AA)
+        # Check if we're in count-in phase
+        if current_measure < 0:
+            # Count-in phase
+            count_in_number = abs(current_measure)
+            
+            # Count-in label
+            count_in_label = "COUNT-IN"
+            cv2.putText(frame, count_in_label, (width//2 - len(count_in_label)*25, height//2 - 180), 
+                       font, 2.5, orange, 4, cv2.LINE_AA)
+            
+            # Count-in measure number
+            if count_in_measures > 2:
+                measure_text = f"Count-in {count_in_number}"
+            else:
+                measure_text = f"Count-in {count_in_number}"
+            cv2.putText(frame, measure_text, (width//2 - 180, height//2 - 100), 
+                       font, 3, orange, 4, cv2.LINE_AA)
+            
+            # Current section (disabled during count-in)
+            section_text = "Ready to start..."
+            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 20), 
+                       font, 2, orange, 3, cv2.LINE_AA)
+        else:
+            # Regular song measures
+            # Get current section name
+            current_section = self._get_current_section(parsed_data.measures, current_measure)
+            
+            # Current measure (large, centered)
+            measure_text = f"Measure {current_measure}"
+            cv2.putText(frame, measure_text, (width//2 - 150, height//2 - 100), 
+                       font, 3, green, 4, cv2.LINE_AA)
+            
+            # Current section
+            section_text = f"Section: {current_section}"
+            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 20), 
+                       font, 2, yellow, 3, cv2.LINE_AA)
         
         # Beat counter
         beat_text = f"Beat: {current_beat}/{time_signature_num}"
@@ -355,7 +428,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
             cv2.putText(frame, str(beat_num), (x-8, indicator_y+8), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     
-    async def _generate_metronome_audio(self, parsed_data: ParsedTabData, duration: float) -> str:
+    async def _generate_metronome_audio(self, parsed_data: ParsedTabData, duration: float, count_in_measures: int = 0) -> str:
         """Generate metronome audio with dynamic tempo changes and emphasis on beat 1."""
         
         sample_rate = 44100
@@ -383,6 +456,34 @@ class VideoExportHandlerImpl(VideoExportHandler):
         current_time = 0
         current_tempo = parsed_data.song_info.tempo
         
+        # First, generate count-in measures
+        if count_in_measures > 0:
+            seconds_per_beat = 60.0 / current_tempo
+            time_signature_num = 4  # Assume 4/4 for count-in
+            
+            for count_in_measure in range(count_in_measures):
+                for beat_num in range(1, time_signature_num + 1):
+                    sample_idx = int(current_time * sample_rate)
+                    
+                    # Add click if within audio bounds
+                    if sample_idx + click_samples <= total_samples:
+                        if beat_num == 1:  # Always beat 1 of measure gets high pitch
+                            audio[sample_idx:sample_idx + click_samples] += beat_1_click
+                        else:
+                            audio[sample_idx:sample_idx + click_samples] += other_beat_click
+                    
+                    # Advance to next beat
+                    current_time += seconds_per_beat
+                    
+                    # Stop if we've exceeded the duration
+                    if current_time >= duration:
+                        break
+                
+                # Stop if we've exceeded the duration
+                if current_time >= duration:
+                    break
+        
+        # Then generate song measures
         for measure in parsed_data.measures:
             # Get tempo and time signature for this measure
             measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
