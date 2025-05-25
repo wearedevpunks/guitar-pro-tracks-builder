@@ -546,6 +546,20 @@
             ],
             "description": "Marker at this measure"
           },
+          "tempo_change": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 300.0,
+                "minimum": 30.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tempo Change",
+            "description": "Tempo change in BPM (if changed at this measure)"
+          },
           "repeat_open": {
             "type": "boolean",
             "title": "Repeat Open",
@@ -811,6 +825,12 @@
             "title": "Tempo Name",
             "description": "Tempo marking name",
             "default": ""
+          },
+          "hide_tempo": {
+            "type": "boolean",
+            "title": "Hide Tempo",
+            "description": "Hide tempo from display",
+            "default": false
           }
         },
         "type": "object",
@@ -820,6 +840,7 @@
           "album": "Master of Puppets",
           "artist": "Metallica",
           "copyright": "1986 Metallica",
+          "hide_tempo": false,
           "instructions": "Tune down 1/2 step",
           "music": "James Hetfield, Lars Ulrich",
           "notice": "",

@@ -219,6 +219,9 @@ class SerializableMeasure(BaseModel):
     key_signature: Optional[SerializableKeySignature] = Field(None, description="Key signature (if changed)")
     marker: Optional[SerializableMarker] = Field(None, description="Marker at this measure")
     
+    # Tempo changes (if any at this measure)
+    tempo_change: Optional[int] = Field(None, description="Tempo change in BPM (if changed at this measure)", ge=30, le=300)
+    
     # Repeat properties
     repeat_open: bool = Field(False, description="Is repeat open")
     repeat_close: int = Field(0, description="Repeat close count (0 = no repeat)")
@@ -245,6 +248,7 @@ class SerializableMeasure(BaseModel):
                 "time_signature": {"numerator": 4, "denominator": 4},
                 "key_signature": {"key": 0, "is_minor": False},
                 "marker": None,
+                "tempo_change": None,
                 "repeat_open": False,
                 "repeat_close": 0,
                 "double_bar": False
@@ -324,6 +328,7 @@ class SerializableSongInfo(BaseModel):
     notice: str = Field("", description="Notice text")
     tempo: int = Field(120, description="Tempo in BPM", ge=30, le=300)
     tempo_name: str = Field("", description="Tempo marking name")
+    hide_tempo: bool = Field(False, description="Hide tempo from display")
     
     class Config:
         json_schema_extra = {
@@ -339,7 +344,8 @@ class SerializableSongInfo(BaseModel):
                 "instructions": "Tune down 1/2 step",
                 "notice": "",
                 "tempo": 212,
-                "tempo_name": "Fast Rock"
+                "tempo_name": "Fast Rock",
+                "hide_tempo": False
             }
         }
 

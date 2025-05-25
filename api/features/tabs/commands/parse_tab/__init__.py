@@ -118,7 +118,8 @@ class ParseTabHandlerImpl(ParseTabHandler):
             instructions=safe_str(getattr(song, 'instructions', '')),
             notice=safe_str(getattr(song, 'notice', '')),
             tempo=getattr(song, 'tempo', 120),
-            tempo_name=safe_str(getattr(song, 'tempoName', ''))
+            tempo_name=safe_str(getattr(song, 'tempoName', '')),
+            hide_tempo=getattr(song, 'hideTempo', False)
         )
 
         # Extract tracks
@@ -317,15 +318,24 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 color=self._convert_marker_color(m)
             )
         
+        # Check for tempo changes (future extension - not currently in pyguitarpro)
+        tempo_change = None
+        # Note: pyguitarpro doesn't currently expose per-measure tempo changes
+        # This field is added for future compatibility if the library is extended
+        
+        # Additional measure effects (double bar from header)
+        double_bar = getattr(header, 'hasDoubleBar', False) if header else False
+        
         return SerializableMeasure(
             number=measure_number,
             beats=beats,
             time_signature=time_sig,
             key_signature=key_sig,
             marker=marker,
+            tempo_change=tempo_change,
             repeat_open=getattr(measure, 'isRepeatOpen', False),
             repeat_close=getattr(measure, 'repeatClose', 0),
-            double_bar=False  # Could be derived from header if needed
+            double_bar=double_bar
         )
     
     def _convert_beat_to_serializable(self, beat) -> SerializableBeat:
@@ -340,15 +350,34 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 serializable_note = self._convert_note_to_serializable(note)
                 serializable_notes.append(serializable_note)
         
+        # Get tuplet information if available
+        tuplet = None
+        beat_tuplet = getattr(beat, 'tuplet', None)
+        if beat_tuplet:
+            tuplet = {
+                'enters': getattr(beat_tuplet, 'enters', 3),
+                'times': getattr(beat_tuplet, 'times', 2)
+            }
+        
         # Create voice for these notes
         voice = SerializableVoice(
             notes=serializable_notes,
             duration=self._get_duration_string(beat),
+            tuplet=tuplet,
             is_rest=len(serializable_notes) == 0
         )
         
         # Get beat effects
         effect = getattr(beat, 'effect', None)
+        
+        # Get stroke direction if available  
+        stroke_direction = None
+        stroke = getattr(effect, 'stroke', None) if effect else None
+        if stroke:
+            direction = getattr(stroke, 'direction', None)
+            if direction:
+                # Convert stroke direction enum to string
+                stroke_direction = str(direction).lower() if hasattr(direction, 'name') else str(direction).lower()
         
         return SerializableBeat(
             voices=[voice],
@@ -357,7 +386,8 @@ class ParseTabHandlerImpl(ParseTabHandler):
             fade_in=getattr(effect, 'fadeIn', False) if effect else False,
             fade_out=getattr(effect, 'fadeOut', False) if effect else False,
             volume_swell=getattr(effect, 'volumeSwell', False) if effect else False,
-            tremolo_picking=getattr(effect, 'tremoloPicking', False) if effect else False
+            tremolo_picking=getattr(effect, 'tremoloPicking', False) if effect else False,
+            stroke_direction=stroke_direction
         )
     
     def _convert_note_to_serializable(self, note) -> SerializableNote:
