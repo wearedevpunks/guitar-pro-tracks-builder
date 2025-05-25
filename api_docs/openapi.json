@@ -361,6 +361,381 @@
           ]
         }
       },
+      "SerializableBeat": {
+        "properties": {
+          "voices": {
+            "items": {
+              "$ref": "#/components/schemas/SerializableVoice"
+            },
+            "type": "array",
+            "title": "Voices",
+            "description": "Voices in this beat"
+          },
+          "start_time": {
+            "type": "integer",
+            "title": "Start Time",
+            "description": "Start time in ticks",
+            "default": 0
+          },
+          "duration": {
+            "type": "string",
+            "title": "Duration",
+            "description": "Beat duration",
+            "default": "quarter"
+          },
+          "fade_in": {
+            "type": "boolean",
+            "title": "Fade In",
+            "description": "Has fade in",
+            "default": false
+          },
+          "fade_out": {
+            "type": "boolean",
+            "title": "Fade Out",
+            "description": "Has fade out",
+            "default": false
+          },
+          "volume_swell": {
+            "type": "boolean",
+            "title": "Volume Swell",
+            "description": "Has volume swell",
+            "default": false
+          },
+          "tremolo_picking": {
+            "type": "boolean",
+            "title": "Tremolo Picking",
+            "description": "Has tremolo picking",
+            "default": false
+          },
+          "stroke_direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stroke Direction",
+            "description": "Stroke direction (up/down)"
+          }
+        },
+        "type": "object",
+        "title": "SerializableBeat",
+        "description": "Serializable beat data.",
+        "example": {
+          "duration": "quarter",
+          "fade_in": false,
+          "fade_out": false,
+          "start_time": 0,
+          "tremolo_picking": false,
+          "voices": [
+            {
+              "duration": "quarter",
+              "is_rest": false,
+              "notes": [
+                {
+                  "fret": 12,
+                  "string": 1,
+                  "value": 64
+                }
+              ]
+            }
+          ],
+          "volume_swell": false
+        }
+      },
+      "SerializableKeySignature": {
+        "properties": {
+          "key": {
+            "type": "integer",
+            "title": "Key",
+            "description": "Key signature (-7 to +7)",
+            "default": 0
+          },
+          "is_minor": {
+            "type": "boolean",
+            "title": "Is Minor",
+            "description": "Is minor key",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SerializableKeySignature",
+        "description": "Serializable key signature.",
+        "example": {
+          "is_minor": false,
+          "key": 0
+        }
+      },
+      "SerializableMarker": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Marker title",
+            "default": ""
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Marker color (hex)"
+          }
+        },
+        "type": "object",
+        "title": "SerializableMarker",
+        "description": "Serializable marker data.",
+        "example": {
+          "color": "#FF0000",
+          "title": "Chorus"
+        }
+      },
+      "SerializableMeasure": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number",
+            "description": "Measure number (1-based)",
+            "default": 1
+          },
+          "beats": {
+            "items": {
+              "$ref": "#/components/schemas/SerializableBeat"
+            },
+            "type": "array",
+            "title": "Beats",
+            "description": "Beats in this measure"
+          },
+          "time_signature": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SerializableTimeSignature"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Time signature (if changed)"
+          },
+          "key_signature": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SerializableKeySignature"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Key signature (if changed)"
+          },
+          "marker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SerializableMarker"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Marker at this measure"
+          },
+          "repeat_open": {
+            "type": "boolean",
+            "title": "Repeat Open",
+            "description": "Is repeat open",
+            "default": false
+          },
+          "repeat_close": {
+            "type": "integer",
+            "title": "Repeat Close",
+            "description": "Repeat close count (0 = no repeat)",
+            "default": 0
+          },
+          "double_bar": {
+            "type": "boolean",
+            "title": "Double Bar",
+            "description": "Has double bar line",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SerializableMeasure",
+        "description": "Serializable measure data.",
+        "example": {
+          "beats": [
+            {
+              "duration": "quarter",
+              "start_time": 0,
+              "voices": [
+                {
+                  "duration": "quarter",
+                  "notes": [
+                    {
+                      "fret": 0,
+                      "string": 1,
+                      "value": 40
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "double_bar": false,
+          "key_signature": {
+            "is_minor": false,
+            "key": 0
+          },
+          "number": 1,
+          "repeat_close": 0,
+          "repeat_open": false,
+          "time_signature": {
+            "denominator": 4,
+            "numerator": 4
+          }
+        }
+      },
+      "SerializableNote": {
+        "properties": {
+          "string": {
+            "type": "integer",
+            "title": "String",
+            "description": "String number (1-based)"
+          },
+          "fret": {
+            "type": "integer",
+            "title": "Fret",
+            "description": "Fret number"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value",
+            "description": "MIDI note value"
+          },
+          "velocity": {
+            "type": "integer",
+            "maximum": 127.0,
+            "minimum": 0.0,
+            "title": "Velocity",
+            "description": "Note velocity (0-127)",
+            "default": 95
+          },
+          "tied": {
+            "type": "boolean",
+            "title": "Tied",
+            "description": "Is note tied",
+            "default": false
+          },
+          "muted": {
+            "type": "boolean",
+            "title": "Muted",
+            "description": "Is note muted",
+            "default": false
+          },
+          "ghost": {
+            "type": "boolean",
+            "title": "Ghost",
+            "description": "Is ghost note",
+            "default": false
+          },
+          "accent": {
+            "type": "boolean",
+            "title": "Accent",
+            "description": "Has accent",
+            "default": false
+          },
+          "heavy_accent": {
+            "type": "boolean",
+            "title": "Heavy Accent",
+            "description": "Has heavy accent",
+            "default": false
+          },
+          "harmonic": {
+            "type": "boolean",
+            "title": "Harmonic",
+            "description": "Is harmonic",
+            "default": false
+          },
+          "palm_mute": {
+            "type": "boolean",
+            "title": "Palm Mute",
+            "description": "Has palm mute",
+            "default": false
+          },
+          "staccato": {
+            "type": "boolean",
+            "title": "Staccato",
+            "description": "Is staccato",
+            "default": false
+          },
+          "let_ring": {
+            "type": "boolean",
+            "title": "Let Ring",
+            "description": "Let ring",
+            "default": false
+          },
+          "bend_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bend Value",
+            "description": "Bend value in semitones"
+          },
+          "slide_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Type",
+            "description": "Slide type"
+          },
+          "vibrato": {
+            "type": "boolean",
+            "title": "Vibrato",
+            "description": "Has vibrato",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "string",
+          "fret",
+          "value"
+        ],
+        "title": "SerializableNote",
+        "description": "Serializable note data.",
+        "example": {
+          "accent": false,
+          "fret": 12,
+          "ghost": false,
+          "harmonic": false,
+          "heavy_accent": false,
+          "let_ring": false,
+          "muted": false,
+          "palm_mute": false,
+          "staccato": false,
+          "string": 1,
+          "tied": false,
+          "value": 64,
+          "velocity": 95,
+          "vibrato": false
+        }
+      },
       "SerializableSongInfo": {
         "properties": {
           "title": {
@@ -481,6 +856,29 @@
           "value": 64
         }
       },
+      "SerializableTimeSignature": {
+        "properties": {
+          "numerator": {
+            "type": "integer",
+            "title": "Numerator",
+            "description": "Time signature numerator",
+            "default": 4
+          },
+          "denominator": {
+            "type": "integer",
+            "title": "Denominator",
+            "description": "Time signature denominator",
+            "default": 4
+          }
+        },
+        "type": "object",
+        "title": "SerializableTimeSignature",
+        "description": "Serializable time signature.",
+        "example": {
+          "denominator": 4,
+          "numerator": 4
+        }
+      },
       "SerializableTrack": {
         "properties": {
           "name": {
@@ -518,6 +916,14 @@
             "type": "array",
             "title": "Tuning",
             "description": "String tuning"
+          },
+          "measures": {
+            "items": {
+              "$ref": "#/components/schemas/SerializableMeasure"
+            },
+            "type": "array",
+            "title": "Measures",
+            "description": "Measures in this track"
           },
           "measure_count": {
             "type": "integer",
@@ -694,6 +1100,60 @@
           "name": "Electric Guitar",
           "pan": 64,
           "volume": 64
+        }
+      },
+      "SerializableVoice": {
+        "properties": {
+          "notes": {
+            "items": {
+              "$ref": "#/components/schemas/SerializableNote"
+            },
+            "type": "array",
+            "title": "Notes",
+            "description": "Notes in this voice"
+          },
+          "duration": {
+            "type": "string",
+            "title": "Duration",
+            "description": "Note duration (whole, half, quarter, eighth, sixteenth, etc.)",
+            "default": "quarter"
+          },
+          "tuplet": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tuplet",
+            "description": "Tuplet information (enters, times)"
+          },
+          "is_rest": {
+            "type": "boolean",
+            "title": "Is Rest",
+            "description": "Is this voice a rest",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SerializableVoice",
+        "description": "Serializable voice data.",
+        "example": {
+          "duration": "quarter",
+          "is_rest": false,
+          "notes": [
+            {
+              "fret": 12,
+              "string": 1,
+              "value": 64,
+              "velocity": 95
+            }
+          ]
         }
       },
       "SongCreateResponse": {

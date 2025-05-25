@@ -259,28 +259,53 @@ class ParseTabHandlerImpl(ParseTabHandler):
                 serializable_beat = self._convert_beat_to_serializable(beat)
                 beats.append(serializable_beat)
         
+        # Helper function to safely extract integer from time signature components
+        def safe_time_sig_int(value, default=4):
+            if value is None:
+                return default
+            if isinstance(value, int):
+                return value
+            # Handle Duration objects or other complex types
+            if hasattr(value, 'value'):
+                return getattr(value, 'value', default)
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                return default
+
         # Get time signature (from header or measure)
         time_sig = None
         if header and hasattr(header, 'timeSignature'):
             ts = header.timeSignature
             time_sig = SerializableTimeSignature(
-                numerator=getattr(ts, 'numerator', 4),
-                denominator=getattr(ts, 'denominator', 4)
+                numerator=safe_time_sig_int(getattr(ts, 'numerator', 4)),
+                denominator=safe_time_sig_int(getattr(ts, 'denominator', 4))
             )
         elif hasattr(measure, 'timeSignature') and measure.timeSignature:
             ts = measure.timeSignature
             time_sig = SerializableTimeSignature(
-                numerator=getattr(ts, 'numerator', 4),
-                denominator=getattr(ts, 'denominator', 4)
+                numerator=safe_time_sig_int(getattr(ts, 'numerator', 4)),
+                denominator=safe_time_sig_int(getattr(ts, 'denominator', 4))
             )
         
+        # Helper function to safely extract integer from key signature
+        def safe_key_int(value, default=0):
+            if value is None:
+                return default
+            if isinstance(value, int):
+                return value
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                return default
+
         # Get key signature
         key_sig = None
         if hasattr(measure, 'keySignature') and measure.keySignature:
             ks = measure.keySignature
             key_sig = SerializableKeySignature(
-                key=getattr(ks, 'key', 0),
-                is_minor=getattr(ks, 'isMinor', False)
+                key=safe_key_int(getattr(ks, 'key', 0)),
+                is_minor=bool(getattr(ks, 'isMinor', False))
             )
         
         # Get marker
@@ -338,26 +363,40 @@ class ParseTabHandlerImpl(ParseTabHandler):
     def _convert_note_to_serializable(self, note) -> SerializableNote:
         """Convert PyGuitarPro Note to serializable format."""
         
+        # Helper function to safely extract integer values
+        def safe_note_int(value, default, min_val=None, max_val=None):
+            if value is None:
+                return default
+            try:
+                int_val = int(value)
+                if min_val is not None:
+                    int_val = max(min_val, int_val)
+                if max_val is not None:
+                    int_val = min(max_val, int_val)
+                return int_val
+            except (ValueError, TypeError):
+                return default
+        
         # Get note effects
         effect = getattr(note, 'effect', None)
         
         return SerializableNote(
-            string=getattr(note, 'string', 1),
-            fret=getattr(note, 'value', 0),
-            value=getattr(note, 'realValue', 40),  # MIDI value
-            velocity=getattr(note, 'velocity', 95),
-            tied=getattr(note, 'isTiedNote', False),
+            string=safe_note_int(getattr(note, 'string', 1), 1, 1, 8),
+            fret=safe_note_int(getattr(note, 'value', 0), 0, 0, 24),
+            value=safe_note_int(getattr(note, 'realValue', 40), 40, 0, 127),  # MIDI value
+            velocity=safe_note_int(getattr(note, 'velocity', 95), 95, 0, 127),
+            tied=bool(getattr(note, 'isTiedNote', False)),
             muted=getattr(note, 'type', None) == 'muted' if hasattr(note, 'type') else False,
             ghost=getattr(note, 'type', None) == 'ghost' if hasattr(note, 'type') else False,
-            accent=getattr(effect, 'accentuatedNote', False) if effect else False,
-            heavy_accent=getattr(effect, 'heavyAccentuatedNote', False) if effect else False,
+            accent=bool(getattr(effect, 'accentuatedNote', False)) if effect else False,
+            heavy_accent=bool(getattr(effect, 'heavyAccentuatedNote', False)) if effect else False,
             harmonic=getattr(effect, 'harmonic', None) is not None if effect else False,
-            palm_mute=getattr(effect, 'palmMute', False) if effect else False,
-            staccato=getattr(effect, 'staccato', False) if effect else False,
-            let_ring=getattr(effect, 'letRing', False) if effect else False,
+            palm_mute=bool(getattr(effect, 'palmMute', False)) if effect else False,
+            staccato=bool(getattr(effect, 'staccato', False)) if effect else False,
+            let_ring=bool(getattr(effect, 'letRing', False)) if effect else False,
             bend_value=self._get_bend_value(effect) if effect else None,
             slide_type=self._get_slide_type(effect) if effect else None,
-            vibrato=getattr(effect, 'vibrato', False) if effect else False
+            vibrato=bool(getattr(effect, 'vibrato', False)) if effect else False
         )
     
     def _get_duration_string(self, beat) -> str:
