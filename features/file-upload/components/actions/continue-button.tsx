@@ -1,8 +1,8 @@
-import { MetalButton } from "@/components/ui/metal/metal-button";
+import { MetalButton } from "@/components/ui/metal/metal-button"
 
 interface ContinueButtonProps {
-  onContinue: () => void;
-  disabled?: boolean;
+  onContinue: () => void
+  disabled?: boolean
 }
 
 export function ContinueButton({ onContinue, disabled }: ContinueButtonProps) {
@@ -18,5 +18,5 @@ export function ContinueButton({ onContinue, disabled }: ContinueButtonProps) {
         🔥 UNLEASH THE FURY 🔥
       </MetalButton>
     </div>
-  );
+  )
 }

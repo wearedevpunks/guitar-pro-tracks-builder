@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
-import { MessageIcon } from "@/components/icons";
-import { Guitar, Skull, Zap } from "lucide-react";
+import { motion } from "framer-motion"
+import { MessageIcon } from "@/components/icons"
+import { Guitar, Skull, Zap } from "lucide-react"
 
 export function MetalOverview() {
   return (
@@ -28,14 +28,15 @@ export function MetalOverview() {
           🔥 UNLEASH YOUR CREATIVITY 🔥
         </h2>
         <p className="text-orange-200 font-medium mb-4">
-          Welcome to the ultimate Guitar Pro Tracks Builder! Create devastating riffs,
-          epic solos, and brutal compositions with AI-powered assistance.
+          Welcome to the ultimate Guitar Pro Tracks Builder! Create devastating
+          riffs, epic solos, and brutal compositions with AI-powered assistance.
         </p>
         <p className="text-muted-foreground">
-          Start chatting to get help with building guitar tracks, chord progressions,
-          tab notation, or any metal-related music theory questions. Let&apos;s forge some sonic fury! 🎸
+          Start chatting to get help with building guitar tracks, chord
+          progressions, tab notation, or any metal-related music theory
+          questions. Let&apos;s forge some sonic fury! 🎸
         </p>
       </div>
     </motion.div>
-  );
+  )
 }

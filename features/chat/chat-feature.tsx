@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useChatLogic } from "./hooks/use-chat-logic";
-import { MessagesArea } from "./components/messages-area";
-import { ChatInputArea } from "./components/chat-input-area";
+import { useChatLogic } from "./hooks/use-chat-logic"
+import { MessagesArea } from "./components/messages-area"
+import { ChatInputArea } from "./components/chat-input-area"
 
 export function ChatFeature() {
   const {
@@ -15,15 +15,11 @@ export function ChatFeature() {
     append,
     isLoading,
     stop,
-  } = useChatLogic();
+  } = useChatLogic()
 
   return (
     <>
-      <MessagesArea 
-        messages={messages}
-        chatId={chatId}
-        isLoading={isLoading}
-      />
+      <MessagesArea messages={messages} chatId={chatId} isLoading={isLoading} />
 
       <ChatInputArea
         chatId={chatId}
@@ -37,5 +33,5 @@ export function ChatFeature() {
         append={append}
       />
     </>
-  );
+  )
 }

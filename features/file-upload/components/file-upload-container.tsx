@@ -1,12 +1,15 @@
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 interface FileUploadContainerProps {
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
 }
 
-export function FileUploadContainer({ children, className }: FileUploadContainerProps) {
+export function FileUploadContainer({
+  children,
+  className,
+}: FileUploadContainerProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -16,5 +19,5 @@ export function FileUploadContainer({ children, className }: FileUploadContainer
     >
       {children}
     </motion.div>
-  );
+  )
 }
