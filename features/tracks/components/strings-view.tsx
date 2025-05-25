@@ -1,4 +1,5 @@
 import { midiToNoteName } from "../converters"
+import { TablatureView, TabNote } from "../../ui-extensions/TablatureView"
 
 interface StringsViewProps {
   track: any
@@ -27,11 +28,54 @@ export function StringsView({ track }: StringsViewProps) {
   }
 
   const tuningInfo = getTuningInfo()
+  const stringMidiValues =
+    tuningInfo.length === stringCount
+      ? tuningInfo.map((t) => t.midiValue)
+      : undefined
+
+  // Convert track data to tabLines for TablatureView
+  function buildTabLines(track: any): TabNote[][] {
+    // Initialize tab lines for each string
+    const lines: TabNote[][] = Array(stringCount)
+      .fill(0)
+      .map(() => [])
+    track.measures.forEach((measure: any, mIdx: number) => {
+      measure.beats?.forEach((beat: any) => {
+        for (let s = 0; s < stringCount; s++) {
+          const stringNumber = s + 1
+          const note = beat.notes?.find((n: any) => n.string === stringNumber)
+          if (note) {
+            lines[s].push({
+              fret: note.fret,
+              technique: note.technique, // expects e.g. "P.M.", "H", "P"
+            })
+          } else {
+            lines[s].push({ fret: "-" })
+          }
+        }
+      })
+      // Add measure separator
+      for (let s = 0; s < stringCount; s++) {
+        lines[s].push({ fret: "|", isMeasureSeparator: true })
+      }
+    })
+    return lines
+  }
+
+  const tabLines = buildTabLines(track)
 
   if (!track.measures || track.measures.length === 0) {
     return (
       <div className="text-center text-gray-500 dark:text-gray-400 py-12">
         <p>No measures data available for strings visualization</p>
+      </div>
+    )
+  }
+
+  if (!stringMidiValues) {
+    return (
+      <div className="text-center text-red-500 dark:text-red-400 py-12">
+        <p>Missing or invalid tuning information for this track.</p>
       </div>
     )
   }
@@ -42,94 +86,10 @@ export function StringsView({ track }: StringsViewProps) {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Strings Tablature View
         </h3>
-
-        <div className="overflow-x-auto">
-          <div className="min-w-max">
-            {/* String lines */}
-            <div className="relative">
-              {Array.from({ length: stringCount }).map((_, stringIndex) => {
-                const stringNumber = stringIndex + 1
-                const tuning = tuningInfo.find(
-                  (t: TuningInfo) => t.stringNumber === stringNumber
-                )
-                const stringName = tuning?.note || `S${stringNumber}`
-
-                return (
-                  <div key={stringIndex} className="flex items-center mb-4">
-                    {/* String label */}
-                    <div className="w-8 text-right mr-4 text-sm font-mono text-gray-600 dark:text-gray-400">
-                      {stringName}
-                    </div>
-
-                    {/* String line with fret numbers */}
-                    <div className="flex-1 relative">
-                      <div className="h-px bg-gray-300 dark:bg-gray-600 absolute top-3 left-0 right-0"></div>
-                      <div className="flex">
-                        {track.measures.map(
-                          (measure: any, measureIndex: number) => (
-                            <div
-                              key={measureIndex}
-                              className="flex border-r border-gray-200 dark:border-gray-700"
-                            >
-                              {measure.beats?.map(
-                                (beat: any, beatIndex: number) => {
-                                  const noteOnString = beat.notes?.find(
-                                    (note: any) => note.string === stringNumber
-                                  )
-                                  return (
-                                    <div
-                                      key={beatIndex}
-                                      className="w-12 h-6 flex items-center justify-center relative"
-                                    >
-                                      {noteOnString ? (
-                                        <div className="bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-mono relative z-10">
-                                          {noteOnString.fret !== undefined
-                                            ? noteOnString.fret
-                                            : "?"}
-                                        </div>
-                                      ) : (
-                                        <div className="w-6 h-6 flex items-center justify-center">
-                                          <div className="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )
-                                }
-                              ) || (
-                                <div className="w-12 h-6 flex items-center justify-center">
-                                  <div className="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Measure numbers */}
-            <div className="flex mt-4">
-              <div className="w-8 mr-4"></div>
-              <div className="flex-1">
-                <div className="flex">
-                  {track.measures.map((_: any, measureIndex: number) => (
-                    <div
-                      key={measureIndex}
-                      className="border-r border-gray-200 dark:border-gray-700"
-                    >
-                      <div className="text-xs text-gray-500 dark:text-gray-400 text-center p-2">
-                        M{measureIndex + 1}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TablatureView
+          stringMidiValues={stringMidiValues}
+          tabLines={tabLines}
+        />
       </div>
     </div>
   )

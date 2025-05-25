@@ -5,14 +5,17 @@ import { NotesView } from "./components/notes-view"
 import { JsonView } from "./components/json-view"
 import { midiToNoteName } from "./converters"
 
-export type VisualizationType = 'measures' | 'strings' | 'notes' | 'json'
+export type VisualizationType = "measures" | "strings" | "notes" | "json"
 
 interface TrackEditorFeatureProps {
   parsedData: any // Will be properly typed when we know the parsed data structure
   onClose: () => void
 }
 
-export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeatureProps) {
+export function TrackEditorFeature({
+  parsedData,
+  onClose,
+}: TrackEditorFeatureProps) {
   const [selectedTrack, setSelectedTrack] = useState<number | null>(null)
 
   const handleTrackSelect = (trackIndex: number) => {
@@ -36,8 +39,18 @@ export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeaturePr
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5 text-gray-600 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -51,30 +64,40 @@ export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeaturePr
                 <div className="p-4">
                   {/* Song Info */}
                   <div className="mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Song Info</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      Song Info
+                    </h2>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                        <span className="text-gray-600 dark:text-gray-400">Tracks:</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Tracks:
+                        </span>
                         <div className="font-bold text-blue-600 dark:text-blue-400">
                           {parsedData.tracks?.length || 0}
                         </div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                        <span className="text-gray-600 dark:text-gray-400">Tempo:</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Tempo:
+                        </span>
                         <div className="font-bold text-green-600 dark:text-green-400">
-                          {parsedData.tempo || 'N/A'}
+                          {parsedData.tempo || "N/A"}
                         </div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                        <span className="text-gray-600 dark:text-gray-400">Time:</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Time:
+                        </span>
                         <div className="font-bold text-purple-600 dark:text-purple-400">
-                          {parsedData.timeSignature || 'N/A'}
+                          {parsedData.timeSignature || "N/A"}
                         </div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                        <span className="text-gray-600 dark:text-gray-400">Measures:</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Measures:
+                        </span>
                         <div className="font-bold text-orange-600 dark:text-orange-400">
-                          {parsedData.measureCount || 'N/A'}
+                          {parsedData.measureCount || "N/A"}
                         </div>
                       </div>
                     </div>
@@ -82,7 +105,9 @@ export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeaturePr
 
                   {/* Track List */}
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Tracks</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      Tracks
+                    </h2>
                     <div className="space-y-2">
                       {parsedData.tracks?.map((track: any, index: number) => (
                         <button
@@ -90,8 +115,8 @@ export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeaturePr
                           onClick={() => handleTrackSelect(index)}
                           className={`w-full text-left p-3 rounded-lg border transition-colors ${
                             selectedTrack === index
-                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
-                              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                              ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
@@ -103,11 +128,12 @@ export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeaturePr
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {track.instrument || 'Unknown'} • {track.strings || 'N/A'} strings
+                            {track.instrument || "Unknown"} •{" "}
+                            {track.strings || "N/A"} strings
                           </p>
                           <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            <span>Ch: {track.channel || 'N/A'}</span>
-                            <span>Notes: {track.noteCount || 'N/A'}</span>
+                            <span>Ch: {track.channel || "N/A"}</span>
+                            <span>Notes: {track.noteCount || "N/A"}</span>
                           </div>
                         </button>
                       ))}
@@ -118,19 +144,34 @@ export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeaturePr
 
               {/* Main Content - Track Details */}
               <div className="flex-1 overflow-y-auto">
-                {selectedTrack !== null && parsedData.tracks?.[selectedTrack] ? (
-                  <TrackDetails track={parsedData.tracks[selectedTrack]} trackIndex={selectedTrack} />
+                {selectedTrack !== null &&
+                parsedData.tracks?.[selectedTrack] ? (
+                  <TrackDetails
+                    track={parsedData.tracks[selectedTrack]}
+                    trackIndex={selectedTrack}
+                  />
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center text-gray-500 dark:text-gray-400">
                       <div className="mb-4">
-                        <svg className="mx-auto h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        <svg
+                          className="mx-auto h-16 w-16"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                          />
                         </svg>
                       </div>
                       <p className="text-lg font-medium mb-2">Select a Track</p>
                       <p className="text-sm">
-                        Choose a track from the left panel to view its measures and details
+                        Choose a track from the left panel to view its measures
+                        and details
                       </p>
                     </div>
                   </div>
@@ -141,11 +182,23 @@ export function TrackEditorFeature({ parsedData, onClose }: TrackEditorFeaturePr
             <div className="flex items-center justify-center w-full">
               <div className="text-center text-gray-500 dark:text-gray-400">
                 <div className="mb-4">
-                  <svg className="mx-auto h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  <svg
+                    className="mx-auto h-16 w-16"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                    />
                   </svg>
                 </div>
-                <p className="text-lg font-medium mb-2">No Track Data Available</p>
+                <p className="text-lg font-medium mb-2">
+                  No Track Data Available
+                </p>
                 <p className="text-sm">
                   The parsed track data will be displayed here once available
                 </p>
@@ -180,13 +233,13 @@ interface TuningInfo {
 }
 
 function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
-  const [activeView, setActiveView] = useState<VisualizationType>('strings')
+  const [activeView, setActiveView] = useState<VisualizationType>("strings")
 
   const tabs = [
-    { id: 'strings' as const, label: 'Strings', icon: '🎸' },
-    { id: 'measures' as const, label: 'Measures', icon: '📏' },
-    { id: 'notes' as const, label: 'Note Details', icon: '🎵' },
-    { id: 'json' as const, label: 'JSON', icon: '📋' }
+    { id: "strings" as const, label: "Strings", icon: "🎸" },
+    { id: "measures" as const, label: "Measures", icon: "📏" },
+    { id: "notes" as const, label: "Note Details", icon: "🎵" },
+    { id: "json" as const, label: "JSON", icon: "📋" },
   ]
 
   // Get tuning from track data or use default
@@ -195,7 +248,7 @@ function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
       return track.tuning.map((tuning: any) => ({
         stringNumber: tuning.string_number,
         note: midiToNoteName(tuning.value),
-        midiValue: tuning.value
+        midiValue: tuning.value,
       }))
     }
     return []
@@ -215,20 +268,34 @@ function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex flex-wrap gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-gray-600 dark:text-gray-400">Instrument:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{track.instrument || 'Unknown'}</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Instrument:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {track.instrument || "Unknown"}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-600 dark:text-gray-400">Strings:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{stringCount}</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Strings:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {stringCount}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-600 dark:text-gray-400">Channel:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{track.channel || 'N/A'}</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Channel:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {track.channel || "N/A"}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-600 dark:text-gray-400">Notes:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{track.noteCount || 'N/A'}</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {track.noteCount || "N/A"}
+                </span>
               </div>
             </div>
           </div>
@@ -238,7 +305,7 @@ function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
               {tuningInfo.map((tuning: TuningInfo, index: number) => (
                 <span key={tuning.stringNumber} className="mr-3">
                   String {tuning.stringNumber}: {tuning.note}
-                  {index < tuningInfo.length - 1 && ' •'}
+                  {index < tuningInfo.length - 1 && " •"}
                 </span>
               ))}
             </div>
@@ -256,8 +323,8 @@ function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
                 onClick={() => setActiveView(tab.id)}
                 className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                   activeView === tab.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
                 }`}
               >
                 <span>{tab.icon}</span>
@@ -270,10 +337,10 @@ function TrackDetails({ track, trackIndex }: TrackDetailsProps) {
 
       {/* Visualization Content */}
       <div className="min-h-[400px]">
-        {activeView === 'strings' && <StringsView track={track} />}
-        {activeView === 'measures' && <MeasuresView track={track} />}
-        {activeView === 'notes' && <NotesView track={track} />}
-        {activeView === 'json' && <JsonView track={track} />}
+        {activeView === "strings" && <StringsView track={track} />}
+        {activeView === "measures" && <MeasuresView track={track} />}
+        {activeView === "notes" && <NotesView track={track} />}
+        {activeView === "json" && <JsonView track={track} />}
       </div>
     </div>
   )
