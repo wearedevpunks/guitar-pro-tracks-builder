@@ -39,7 +39,7 @@ async def create_new_song_action(
             raise HTTPException(status_code=400, detail="No filename provided")
         
         # Check file extension (basic validation)
-        allowed_extensions = {'.gp3', '.gp4', '.gp5', '.gpx', '.gtp'}
+        allowed_extensions = {'.gp', '.gp3', '.gp4', '.gp5', '.gpx', '.gtp'}
         file_extension = '.' + file.filename.split('.')[-1].lower() if '.' in file.filename else ''
         
         if file_extension not in allowed_extensions:
