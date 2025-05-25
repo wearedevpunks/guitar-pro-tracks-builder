@@ -14,8 +14,8 @@ class SerializableTrackSettings(BaseModel):
     is_muted: bool = Field(False, description="Is track muted")
     is_solo: bool = Field(False, description="Is track solo")
     is_visible: bool = Field(True, description="Is track visible")
-    volume: int = Field(8, description="Track volume (0-15)", ge=0, le=15)
-    pan: int = Field(8, description="Track pan (0-15)", ge=0, le=15)
+    volume: int = Field(64, description="Track volume (0-127)", ge=0, le=127)
+    pan: int = Field(64, description="Track pan (0-127)", ge=0, le=127)
     channel: int = Field(1, description="MIDI channel", ge=1, le=16)
     
     class Config:
@@ -30,8 +30,8 @@ class SerializableTrackSettings(BaseModel):
                 "is_muted": False,
                 "is_solo": False,
                 "is_visible": True,
-                "volume": 8,
-                "pan": 8,
+                "volume": 64,
+                "pan": 64,
                 "channel": 1
             }
         }
