@@ -6,6 +6,7 @@ interface ExportSongDialogProps {
   isExporting: boolean
   onClose: () => void
   onConfirm: () => void
+  error?: Error | null
 }
 
 export function ExportSongDialog({
@@ -14,6 +15,7 @@ export function ExportSongDialog({
   isExporting,
   onClose,
   onConfirm,
+  error,
 }: ExportSongDialogProps) {
   if (!isOpen) return null
 
@@ -41,11 +43,11 @@ export function ExportSongDialog({
 
           <div className="text-center">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Export Song
+              Export Video
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Are you sure you want to export this song? This will generate a
-              downloadable file with the song data.
+              metronome video with visual timing cues for band practice.
             </p>
 
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-6">
@@ -58,6 +60,23 @@ export function ExportSongDialog({
                 </div>
               )}
             </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-6">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-red-700 dark:text-red-300">
+                    <strong>Export Error:</strong> {error.message}
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                  Click "Export Video" to try again.
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3">
@@ -98,7 +117,7 @@ export function ExportSongDialog({
                   Exporting...
                 </>
               ) : (
-                "Export Song"
+                "Export Video"
               )}
             </button>
           </div>

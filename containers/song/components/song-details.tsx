@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { SongGetResponse } from "@/integrations/backend/api"
+import { useMutation } from "@tanstack/react-query"
+import { SongGetResponse, songExportVideo } from "@/integrations/backend/api"
 import { ExportSongDialog } from "./export-song-dialog"
 
 interface SongDetailsProps {
@@ -9,27 +10,52 @@ interface SongDetailsProps {
 
 export function SongDetails({ song, onEditSong }: SongDetailsProps) {
   const [showExportDialog, setShowExportDialog] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
 
-  const handleExportSong = async () => {
-    setIsExporting(true)
-    try {
-      // TODO: Implement export API call when backend endpoint is available
-      // const response = await exportSong({ path: { song_id: song.song_id } })
+  const exportVideoMutation = useMutation({
+    mutationFn: async () => {
+      if (!song.song_id) {
+        throw new Error("Song ID is missing. Cannot export.")
+      }
 
-      // Placeholder for now - simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const response = await songExportVideo({
+        body: {
+          song_id: song.song_id,
+          output_format: "mp4",
+          resolution: [1920, 1080],
+          fps: 30,
+        }
+      })
 
-      alert(
-        "Export functionality will be implemented when the backend export endpoint is available."
-      )
-    } catch (error) {
-      console.error("Export failed:", error)
-      alert("Export failed. Please try again.")
-    } finally {
-      setIsExporting(false)
+      if (!response.data?.success || !response.data?.video_file) {
+        throw new Error(response.data?.message || "Export failed")
+      }
+
+      return response.data
+    },
+    onSuccess: (data) => {
+      // Create download link
+      const downloadUrl = `/api/files/${data.video_file!.provider}/${data.video_file!.reference}`
+      
+      // Trigger download
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `song-${song.song_id}-export.mp4`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Show success message with details
+      alert(`Export successful! Video duration: ${data.duration_seconds}s with ${data.total_measures} measures.`)
       setShowExportDialog(false)
+    },
+    onError: (error) => {
+      console.error("Export failed:", error)
+      // Error will be displayed in the dialog, no need for alert here
     }
+  })
+
+  const handleExportSong = () => {
+    exportVideoMutation.mutate()
   }
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -108,7 +134,7 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
             onClick={() => setShowExportDialog(true)}
             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
-            Export Song
+            Export Video
           </button>
         </div>
       </div>
@@ -116,9 +142,10 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
       <ExportSongDialog
         song={song}
         isOpen={showExportDialog}
-        isExporting={isExporting}
+        isExporting={exportVideoMutation.isPending}
         onClose={() => setShowExportDialog(false)}
         onConfirm={handleExportSong}
+        error={exportVideoMutation.error}
       />
     </div>
   )
