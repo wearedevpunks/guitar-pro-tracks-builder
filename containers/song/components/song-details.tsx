@@ -1,10 +1,11 @@
-import { SongGetResponse } from "@/integrations/backend/api"
+import { GetSongResponse } from "@/integrations/backend/api"
 
 interface SongDetailsProps {
-  song: SongGetResponse
+  song: GetSongResponse
+  onEditSong: () => void
 }
 
-export function SongDetails({ song }: SongDetailsProps) {
+export function SongDetails({ song, onEditSong }: SongDetailsProps) {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
@@ -66,7 +67,10 @@ export function SongDetails({ song }: SongDetailsProps) {
         </div>
 
         <div className="mt-8 flex gap-4">
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={onEditSong}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             Edit Song
           </button>
           <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">

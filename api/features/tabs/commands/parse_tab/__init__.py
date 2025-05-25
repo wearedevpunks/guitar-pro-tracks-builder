@@ -87,20 +87,31 @@ class ParseTabHandlerImpl(ParseTabHandler):
     def _convert_song_to_serializable(self, song: guitarpro.Song) -> ParsedTabData:
         """Convert PyGuitarPro Song to serializable format."""
 
-        # Extract song info
+        # Helper function to safely convert to string
+        def safe_str(value, default=''):
+            if isinstance(value, str):
+                return value
+            elif isinstance(value, list):
+                return '\n'.join(str(item) for item in value) if value else default
+            elif value is None:
+                return default
+            else:
+                return str(value)
+
+        # Extract song info with safe string conversion
         song_info = SerializableSongInfo(
-            title=getattr(song, 'title', ''),
-            subtitle=getattr(song, 'subtitle', ''),
-            artist=getattr(song, 'artist', ''),
-            album=getattr(song, 'album', ''),
-            music=getattr(song, 'music', ''),
-            words=getattr(song, 'words', ''),
-            copyright=getattr(song, 'copyright', ''),
-            tab=getattr(song, 'tab', ''),
-            instructions=getattr(song, 'instructions', ''),
-            notice=getattr(song, 'notice', ''),
+            title=safe_str(getattr(song, 'title', '')),
+            subtitle=safe_str(getattr(song, 'subtitle', '')),
+            artist=safe_str(getattr(song, 'artist', '')),
+            album=safe_str(getattr(song, 'album', '')),
+            music=safe_str(getattr(song, 'music', '')),
+            words=safe_str(getattr(song, 'words', '')),
+            copyright=safe_str(getattr(song, 'copyright', '')),
+            tab=safe_str(getattr(song, 'tab', '')),
+            instructions=safe_str(getattr(song, 'instructions', '')),
+            notice=safe_str(getattr(song, 'notice', '')),
             tempo=getattr(song, 'tempo', 120),
-            tempo_name=getattr(song, 'tempoName', '')
+            tempo_name=safe_str(getattr(song, 'tempoName', ''))
         )
 
         # Extract tracks
