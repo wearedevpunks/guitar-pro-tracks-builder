@@ -1,5 +1,5 @@
 import { midiToNoteName } from "../converters"
-import { TablatureView, TabNote } from "../../ui-extensions/TablatureView"
+import { TablatureView, TabNote } from "@/components/ui-extensions"
 
 interface StringsViewProps {
   track: any
@@ -39,7 +39,8 @@ export function StringsView({ track }: StringsViewProps) {
     const lines: TabNote[][] = Array(stringCount)
       .fill(0)
       .map(() => [])
-    track.measures.forEach((measure: any, mIdx: number) => {
+    
+    track.measures.forEach((measure: any) => {
       measure.beats?.forEach((beat: any) => {
         for (let s = 0; s < stringCount; s++) {
           const stringNumber = s + 1
@@ -47,10 +48,17 @@ export function StringsView({ track }: StringsViewProps) {
           if (note) {
             lines[s].push({
               fret: note.fret,
-              technique: note.technique, // expects e.g. "P.M.", "H", "P"
+              technique: note.technique || note.effect || note.articulation,
+              duration: beat.duration || note.duration,
+              legato: note.legato || false,
+              accent: note.accent || note.accentuated || false,
+              velocity: note.velocity || beat.velocity
             })
           } else {
-            lines[s].push({ fret: "-" })
+            lines[s].push({ 
+              fret: "-",
+              duration: beat.duration
+            })
           }
         }
       })
@@ -89,6 +97,8 @@ export function StringsView({ track }: StringsViewProps) {
         <TablatureView
           stringMidiValues={stringMidiValues}
           tabLines={tabLines}
+          tempo={track.tempo}
+          timeSignature={track.timeSignature}
         />
       </div>
     </div>
