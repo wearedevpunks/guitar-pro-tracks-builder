@@ -71,8 +71,8 @@ async def export_song_video_action(
             **export_kwargs
         )
         
-        if not video_result.get("success", False):
-            error_msg = video_result.get("error_message", "Unknown error during video export")
+        if not video_result.success:
+            error_msg = video_result.error_message or "Unknown error during video export"
             logger.error(f"Video export failed for song {request.song_id}: {error_msg}")
             return VideoExportResponse(
                 success=False,
@@ -99,9 +99,9 @@ async def export_song_video_action(
             success=True,
             message="Video exported successfully",
             song_id=request.song_id,
-            video_file=video_result.get("video_file"),
-            duration_seconds=video_result.get("duration_seconds", 0),
-            total_measures=video_result.get("total_measures", 0),
+            video_file=video_result.video_file,
+            duration_seconds=video_result.duration_seconds,
+            total_measures=video_result.total_measures,
             export_settings=export_settings
         )
         

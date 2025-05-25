@@ -6,7 +6,6 @@ import os
 import cv2
 import numpy as np
 from moviepy import VideoFileClip, AudioFileClip
-import librosa
 import soundfile as sf
 
 from api.abstractions.storage import FileReference
