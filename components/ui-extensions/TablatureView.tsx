@@ -29,6 +29,7 @@ interface TablatureViewProps {
   tabLines: TabNote[][] // Array of tab lines, one per string
   tempo?: number
   timeSignature?: string
+  measures?: Array<{ number: number; section_name?: string }> // Measure info with section names
 }
 
 export function TablatureView({
@@ -36,6 +37,7 @@ export function TablatureView({
   tabLines,
   tempo,
   timeSignature,
+  measures,
 }: TablatureViewProps) {
   const [viewMode, setViewMode] = useState<"horizontal" | "wrapped">(
     "horizontal"
@@ -306,25 +308,36 @@ export function TablatureView({
             <div className="flex mt-4">
               <div className="w-8 mr-4 flex-shrink-0"></div>
               <div className="flex">
-                {measurePositions.map((position, measureIndex) => (
-                  <div
-                    key={measureIndex}
-                    style={{
-                      marginLeft:
-                        measureIndex === 0
-                          ? "0"
-                          : `${
-                              (position -
-                                (measurePositions[measureIndex - 1] || 0)) *
-                                32 -
-                              32
-                            }px`,
-                    }}
-                    className="text-xs text-gray-500 dark:text-gray-400 text-center min-w-[32px]"
-                  >
-                    {measureIndex + 1}
-                  </div>
-                ))}
+                {measurePositions.map((position, measureIndex) => {
+                  const measureNumber = measureIndex + 1
+                  const measureInfo = measures?.find(m => m.number === measureNumber)
+                  const sectionName = measureInfo?.section_name
+                  
+                  return (
+                    <div
+                      key={measureIndex}
+                      style={{
+                        marginLeft:
+                          measureIndex === 0
+                            ? "0"
+                            : `${
+                                (position -
+                                  (measurePositions[measureIndex - 1] || 0)) *
+                                  32 -
+                                32
+                              }px`,
+                      }}
+                      className="text-xs text-gray-500 dark:text-gray-400 text-center min-w-[32px]"
+                    >
+                      <div className="font-mono">{measureNumber}</div>
+                      {sectionName && (
+                        <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1 whitespace-nowrap">
+                          {sectionName}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -438,14 +451,24 @@ export function TablatureView({
                         }
                       })
 
-                      return measuresInThisRow.map((measureNum, index) => (
-                        <div
-                          key={index}
-                          className="text-xs font-mono text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded border"
-                        >
-                          M{measureNum}
-                        </div>
-                      ))
+                      return measuresInThisRow.map((measureNum, index) => {
+                        const measureInfo = measures?.find(m => m.number === measureNum)
+                        const sectionName = measureInfo?.section_name
+                        
+                        return (
+                          <div
+                            key={index}
+                            className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded border"
+                          >
+                            <div className="font-mono">M{measureNum}</div>
+                            {sectionName && (
+                              <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                                {sectionName}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })
                     })()}
                   </div>
                 </div>

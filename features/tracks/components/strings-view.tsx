@@ -124,6 +124,7 @@ export function StringsView({ track }: StringsViewProps) {
           tabLines={tabLines}
           tempo={track.tempo}
           timeSignature={track.timeSignature}
+          measures={track.measures}
         />
       </div>
     </div>
