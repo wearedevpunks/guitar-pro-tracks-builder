@@ -57,11 +57,17 @@ async def export_song_video_action(
         
         # Export video with the provided settings
         logger.info(f"Exporting video for song: {request.song_id}")
+        
+        # Extract filename from file reference
+        import os
+        filename = os.path.basename(song_result.tab.file.reference) if song_result.tab.file else None
+        
         export_kwargs = {
             "output_format": request.output_format,
             "resolution": request.resolution,
             "fps": request.fps,
-            "count_in_measures": request.count_in_measures
+            "count_in_measures": request.count_in_measures,
+            "filename": filename
         }
         
         if request.duration_per_measure:
@@ -75,7 +81,7 @@ async def export_song_video_action(
         
         if not video_result.success:
             error_msg = video_result.error_message or "Unknown error during video export"
-            logger.error(f"Video export failed for song {request.song_id}: {error_msg}")
+            logger.exception(f"Video export failed for song {request.song_id}: {error_msg}")
             return VideoExportResponse(
                 success=False,
                 message=f"Video export failed: {error_msg}",
@@ -109,7 +115,7 @@ async def export_song_video_action(
         )
         
     except Exception as e:
-        logger.error(f"Unexpected error during video export for song {request.song_id}: {str(e)}")
+        logger.exception(f"Unexpected error during video export for song {request.song_id}: {str(e)}")
         return VideoExportResponse(
             success=False,
             message=f"Internal server error: {str(e)}",

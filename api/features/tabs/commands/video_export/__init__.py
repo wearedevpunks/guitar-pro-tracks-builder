@@ -25,6 +25,7 @@ class VideoExportCommand(BaseModel):
     fps: int = Field(30, description="Frames per second")
     duration_per_measure: Optional[float] = Field(None, description="Override duration per measure in seconds")
     count_in_measures: int = Field(0, description="Number of count-in measures before the song starts")
+    filename: Optional[str] = Field(None, description="Original filename of the tab file")
 
 
 class VideoExportResult(BaseModel):
@@ -113,7 +114,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 time_signature_num,
                 avg_seconds_per_measure,
                 total_duration,
-                command.count_in_measures
+                command.count_in_measures,
+                command
             )
             
             # Store the video file with timestamp in songs folder
@@ -153,7 +155,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
         initial_time_signature_num: int,
         initial_seconds_per_measure: float,
         total_duration: float,
-        count_in_measures: int = 0
+        count_in_measures: int = 0,
+        command: VideoExportCommand = None
     ) -> str:
         """Generate the actual video file with dynamic tempo and time signature changes."""
         
@@ -175,7 +178,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
             # Generate video frames
             for frame_num in range(total_frames):
                 current_time = frame_num / fps
-                frame = self._create_frame(parsed_data, width, height, current_time, count_in_measures)
+                frame = self._create_frame(parsed_data, width, height, current_time, count_in_measures, command)
                 video_writer.write(frame)
             
             video_writer.release()
@@ -292,7 +295,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
         width: int,
         height: int,
         current_time: float,
-        count_in_measures: int = 0
+        count_in_measures: int = 0,
+        command: VideoExportCommand = None
     ) -> np.ndarray:
         """Create a single video frame with dynamic tempo and time signature."""
         
@@ -313,9 +317,13 @@ class VideoExportHandlerImpl(VideoExportHandler):
         # Font settings
         font = cv2.FONT_HERSHEY_SIMPLEX
         
-        # Title
-        title = parsed_data.song_info.title or "Metronome"
-        cv2.putText(frame, title, (width//2 - len(title)*20, 100), 
+        # Title - use filename if available, otherwise song title, otherwise "Metronome"
+        if command and command.filename:
+            # Remove file extension and use filename
+            title = command.filename.rsplit('.', 1)[0] if '.' in command.filename else command.filename
+        else:
+            title = parsed_data.song_info.title or "Metronome"
+        cv2.putText(frame, title, (width//2 - len(title)*20, 80), 
                    font, 2, white, 3, cv2.LINE_AA)
         
         # Tempo
@@ -330,7 +338,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
             
             # Count-in label
             count_in_label = "COUNT-IN"
-            cv2.putText(frame, count_in_label, (width//2 - len(count_in_label)*25, height//2 - 180), 
+            cv2.putText(frame, count_in_label, (width//2 - len(count_in_label)*25, height//2 - 220), 
                        font, 2.5, orange, 4, cv2.LINE_AA)
             
             # Count-in measure number
@@ -338,12 +346,12 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 measure_text = f"Count-in {count_in_number}"
             else:
                 measure_text = f"Count-in {count_in_number}"
-            cv2.putText(frame, measure_text, (width//2 - 180, height//2 - 100), 
+            cv2.putText(frame, measure_text, (width//2 - 180, height//2 - 140), 
                        font, 3, orange, 4, cv2.LINE_AA)
             
             # Current section (disabled during count-in)
             section_text = "Ready to start..."
-            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 20), 
+            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 60), 
                        font, 2, orange, 3, cv2.LINE_AA)
         else:
             # Regular song measures
@@ -352,22 +360,17 @@ class VideoExportHandlerImpl(VideoExportHandler):
             
             # Current measure (large, centered)
             measure_text = f"Measure {current_measure}"
-            cv2.putText(frame, measure_text, (width//2 - 150, height//2 - 100), 
+            cv2.putText(frame, measure_text, (width//2 - 150, height//2 - 140), 
                        font, 3, green, 4, cv2.LINE_AA)
             
             # Current section
             section_text = f"Section: {current_section}"
-            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 20), 
+            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 60), 
                        font, 2, yellow, 3, cv2.LINE_AA)
         
         # Beat counter
         beat_text = f"Beat: {current_beat}/{time_signature_num}"
-        cv2.putText(frame, beat_text, (width//2 - 100, height//2 + 60), 
-                   font, 2, white, 3, cv2.LINE_AA)
-        
-        # Quarter note counter (same as beat for 4/4)
-        quarter_text = f"Quarter: {current_quarter}"
-        cv2.putText(frame, quarter_text, (width//2 - 120, height//2 + 120), 
+        cv2.putText(frame, beat_text, (width//2 - 100, height//2 + 40), 
                    font, 2, white, 3, cv2.LINE_AA)
         
         # Visual metronome
