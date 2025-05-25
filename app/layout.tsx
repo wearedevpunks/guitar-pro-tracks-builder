@@ -1,8 +1,8 @@
-import "./globals.css";
-import { GeistSans } from "geist/font/sans";
-import { Toaster } from "sonner";
-import { cn } from "@/lib/utils";
-import { Navbar } from "@/components/navbar";
+import "./globals.css"
+import { GeistSans } from "geist/font/sans"
+import { Toaster } from "sonner"
+import { cn } from "@/lib/utils"
+import { Navbar } from "@/components/navbar"
 
 export const metadata = {
   title: "Guitar Pro Tracks Builder",
@@ -23,12 +23,12 @@ export const metadata = {
       },
     ],
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
@@ -36,8 +36,10 @@ export default function RootLayout({
       <body className={cn(GeistSans.className, "antialiased dark")}>
         <Toaster position="top-center" richColors />
         <Navbar />
-        {children}
+        <div className="flex flex-col items-center justify-center min-h-screen w-full px-4">
+          {children}
+        </div>
       </body>
     </html>
-  );
+  )
 }

@@ -26,6 +26,17 @@ export function FileDropZone({ onFileSelect }: FileDropZoneProps) {
   return (
     <div className="w-full">
       <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors bg-gray-50/50">
+        <div className="space-y-4 text-center">
+          <div>
+            <p className="text-lg font-medium text-gray-800">
+              Drop your Guitar Pro file here
+            </p>
+            <p className="text-xs text-gray-600 mt-2">
+              Supports .gp, .gpx, .gp5, .gp4 files
+            </p>
+          </div>
+        </div>
+
         <input
           type="file"
           accept=".gp,.gpx,.gp5,.gp4"
