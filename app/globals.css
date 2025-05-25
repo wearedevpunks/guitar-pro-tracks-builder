@@ -2,15 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-    --foreground-rgb: 0, 0, 0;
-    --background-start-rgb: 214, 219, 220;
-    --background-end-rgb: 255, 255, 255;
-}
-
 @layer base {
     :root {
-        /* Dark metal theme by default */
         --background: 0 0% 6%;
         --foreground: 0 0% 95%;
         --card: 0 0% 8%;
@@ -30,39 +23,7 @@
         --border: 0 0% 20%;
         --input: 0 0% 15%;
         --ring: 0 84% 60%;
-        --chart-1: 0 84% 60%;
-        --chart-2: 39 100% 50%;
-        --chart-3: 0 0% 80%;
-        --chart-4: 15 100% 50%;
-        --chart-5: 300 100% 50%;
         --radius: 0.75rem;
-    }
-    .dark {
-        /* Even darker for explicit dark mode */
-        --background: 0 0% 3%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 5%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 5%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 84% 60%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 12%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 8%;
-        --muted-foreground: 0 0% 65%;
-        --accent: 39 100% 50%;
-        --accent-foreground: 0 0% 3%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 15%;
-        --input: 0 0% 12%;
-        --ring: 0 84% 60%;
-        --chart-1: 0 84% 60%;
-        --chart-2: 39 100% 50%;
-        --chart-3: 0 0% 80%;
-        --chart-4: 15 100% 50%;
-        --chart-5: 300 100% 50%;
     }
 }
 
@@ -72,77 +33,5 @@
     }
     body {
         @apply bg-background text-foreground;
-        background-image: 
-            radial-gradient(circle at 25% 25%, rgba(255, 0, 0, 0.1) 0%, transparent 25%),
-            radial-gradient(circle at 75% 75%, rgba(255, 165, 0, 0.08) 0%, transparent 25%);
-    }
-}
-
-/* Metal-themed custom styles */
-.metal-gradient {
-    background: linear-gradient(135deg, 
-        #dc2626 0%, 
-        #ea580c 25%, 
-        #facc15 50%, 
-        #ea580c 75%, 
-        #dc2626 100%);
-    background-size: 300% 300%;
-    animation: metalShine 3s ease-in-out infinite;
-}
-
-@keyframes metalShine {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-}
-
-.flame-glow {
-    filter: drop-shadow(0 0 20px rgba(255, 69, 0, 0.8)) 
-            drop-shadow(0 0 40px rgba(255, 140, 0, 0.6));
-}
-
-.metal-text {
-    text-shadow: 
-        0 0 10px rgba(255, 0, 0, 0.8),
-        0 0 20px rgba(255, 69, 0, 0.6),
-        0 0 30px rgba(255, 140, 0, 0.4);
-}
-
-.skull-shadow {
-    box-shadow: 
-        0 0 20px rgba(255, 0, 0, 0.3),
-        inset 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.metal-border {
-    border: 2px solid transparent;
-    background: linear-gradient(var(--background), var(--background)) padding-box,
-                linear-gradient(135deg, #dc2626, #ea580c, #facc15) border-box;
-}
-
-.distorted-hover {
-    transition: all 0.3s ease;
-}
-
-.distorted-hover:hover {
-    transform: scale(1.05) rotate(1deg);
-    filter: brightness(1.2) contrast(1.1);
-}
-
-.skeleton {
-    * {
-        pointer-events: none !important;
-    }
-
-    *[class^="text-"] {
-        color: transparent;
-        @apply rounded-md bg-foreground/20 select-none animate-pulse;
-    }
-
-    .skeleton-bg {
-        @apply bg-foreground/10;
-    }
-
-    .skeleton-div {
-        @apply bg-foreground/20 animate-pulse;
     }
 }

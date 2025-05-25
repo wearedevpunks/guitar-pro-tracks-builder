@@ -4,7 +4,8 @@
       "Bash(mkdir:*)",
       "Bash(cp:*)",
       "Bash(rm:*)",
-      "Bash(pnpm lint:*)"
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm dev:*)"
     ],
     "deny": []
   }

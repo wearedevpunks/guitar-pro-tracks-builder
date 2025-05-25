@@ -1,3 +1,5 @@
+"use client";
+
 import { useFileUploadLogic } from "./hooks/use-file-upload-logic";
 import { FileDropZone } from "./components/file-drop-zone";
 
@@ -6,7 +8,6 @@ export function FileUploadFeature() {
     uploadedFile,
     handleFileSelect,
     handleContinue,
-    handleStartWithoutFile,
   } = useFileUploadLogic();
 
   return (
@@ -21,13 +22,6 @@ export function FileUploadFeature() {
           Continue with file
         </button>
       )}
-
-      <button
-        onClick={handleStartWithoutFile}
-        className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-      >
-        Start without file
-      </button>
     </div>
   );
 }
