@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className={cn(GeistSans.className, "antialiased dark")}>
         <Toaster position="top-center" richColors />
         <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-screen w-full px-4">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] w-full px-4">
           {children}
         </div>
       </body>
