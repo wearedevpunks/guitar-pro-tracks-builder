@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from pydantic import BaseModel, Field
 import tempfile
 import os
@@ -85,8 +85,11 @@ class VideoExportHandlerImpl(VideoExportHandler):
                     count_in_duration = seconds_per_beat * time_signature_num * command.count_in_measures
                 total_duration += count_in_duration
             
-            # Add song measures duration
-            for measure in command.parsed_data.measures:
+            # Expand measures with repeats
+            expanded_measures = self._expand_measures_with_repeats(command.parsed_data.measures)
+            
+            # Add song measures duration (including repeats)
+            for current_measure_num, measure in expanded_measures:
                 # Get tempo for this measure
                 measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
                 measure_time_sig_num = measure.time_signature.numerator if measure.time_signature else time_signature_num
@@ -101,7 +104,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 total_duration += measure_duration
                 current_tempo = measure_tempo
             
-            total_measures = command.parsed_data.measure_count + command.count_in_measures
+            total_measures = len(expanded_measures) + command.count_in_measures
             
             # Calculate average values for logging
             avg_seconds_per_measure = total_duration / total_measures if total_measures > 0 else 60.0 / tempo_bpm * time_signature_num
@@ -118,7 +121,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 avg_seconds_per_measure,
                 total_duration,
                 command.count_in_measures,
-                command
+                command,
+                expanded_measures
             )
             
             # Store the video file with timestamp in songs folder
@@ -143,7 +147,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
             )
             
         except Exception as e:
-            self.logger.error(f"Video export failed: {str(e)}")
+            self.logger.exception(f"Video export failed: {str(e)}")
             return VideoExportResult(
                 success=False,
                 error_message=str(e)
@@ -159,7 +163,8 @@ class VideoExportHandlerImpl(VideoExportHandler):
         initial_seconds_per_measure: float,
         total_duration: float,
         count_in_measures: int = 0,
-        command: VideoExportCommand = None
+        command: VideoExportCommand = None,
+        expanded_measures: List[tuple] = None
     ) -> str:
         """Generate the actual video file with dynamic tempo and time signature changes."""
         
@@ -176,12 +181,12 @@ class VideoExportHandlerImpl(VideoExportHandler):
         
         try:
             # Generate metronome audio with dynamic tempo changes
-            audio_path = await self._generate_metronome_audio(parsed_data, total_duration, count_in_measures)
+            audio_path = await self._generate_metronome_audio(parsed_data, total_duration, count_in_measures, expanded_measures)
             
             # Generate video frames
             for frame_num in range(total_frames):
                 current_time = frame_num / fps
-                frame = self._create_frame(parsed_data, width, height, current_time, count_in_measures, command)
+                frame = self._create_frame(parsed_data, width, height, current_time, count_in_measures, command, expanded_measures)
                 video_writer.write(frame)
             
             video_writer.release()
@@ -201,7 +206,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 os.unlink(temp_video.name)
             raise e
     
-    def _get_tempo_and_time_sig_at_time(self, parsed_data: ParsedTabData, current_time: float, count_in_measures: int = 0) -> tuple:
+    def _get_tempo_and_time_sig_at_time(self, parsed_data: ParsedTabData, current_time: float, count_in_measures: int = 0, expanded_measures: List[tuple] = None) -> tuple:
         """Get the current tempo and time signature at a specific time in the song."""
         
         current_tempo = parsed_data.song_info.tempo  # Default from song
@@ -217,11 +222,14 @@ class VideoExportHandlerImpl(VideoExportHandler):
         if current_time < count_in_duration:
             return current_tempo, current_time_sig_num
         
+        # Use expanded measures if provided, otherwise fall back to original
+        measures_to_use = expanded_measures if expanded_measures else [(i+1, m) for i, m in enumerate(parsed_data.measures)]
+        
         # Calculate which measure we're in based on cumulative time (after count-in)
         cumulative_time = count_in_duration
         adjusted_time = current_time
         
-        for measure in parsed_data.measures:
+        for current_measure_num, measure in measures_to_use:
             # Get tempo and time signature for this measure
             measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
             measure_time_sig = measure.time_signature.numerator if measure.time_signature else current_time_sig_num
@@ -242,8 +250,13 @@ class VideoExportHandlerImpl(VideoExportHandler):
         # If we're past all measures, return the last known values
         return current_tempo, current_time_sig_num
     
-    def _get_current_measure_and_position(self, parsed_data: ParsedTabData, current_time: float, count_in_measures: int = 0) -> tuple:
-        """Get the current measure number and position within that measure."""
+    def _get_current_measure_and_position(self, parsed_data: ParsedTabData, current_time: float, count_in_measures: int = 0, expanded_measures: List[tuple] = None) -> tuple:
+        """Get the current measure number and position within that measure.
+        
+        Returns:
+            tuple: (current_measure_number, tab_measure_number, current_beat, current_quarter, seconds_per_measure)
+            where current_measure_number is the sequential video measure and tab_measure_number is the original measure
+        """
         
         current_tempo = parsed_data.song_info.tempo
         
@@ -265,12 +278,15 @@ class VideoExportHandlerImpl(VideoExportHandler):
             current_quarter = int(beat_position) + 1
             
             # Return negative measure number to indicate count-in
-            return -count_in_measure, current_beat, current_quarter, seconds_per_measure
+            return -count_in_measure, -count_in_measure, current_beat, current_quarter, seconds_per_measure
+        
+        # Use expanded measures if provided, otherwise fall back to original
+        measures_to_use = expanded_measures if expanded_measures else [(i+1, m) for i, m in enumerate(parsed_data.measures)]
         
         # We're in the actual song measures
         cumulative_time = count_in_duration
         
-        for measure in parsed_data.measures:
+        for current_measure_num, measure in measures_to_use:
             measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
             measure_time_sig_num = measure.time_signature.numerator if measure.time_signature else 4
             
@@ -284,13 +300,88 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 current_beat = int(beat_position) + 1
                 current_quarter = int(beat_position) + 1  # Same as beat for 4/4
                 
-                return measure.number, current_beat, current_quarter, seconds_per_measure
+                return current_measure_num, measure.number, current_beat, current_quarter, seconds_per_measure
             
             cumulative_time += seconds_per_measure
             current_tempo = measure_tempo
         
         # Default if past all measures
-        return len(parsed_data.measures), 1, 1, 60.0 / current_tempo * 4
+        return len(measures_to_use), len(parsed_data.measures), 1, 1, 60.0 / current_tempo * 4
+    
+    def _expand_measures_with_repeats(self, measures: List[SerializableMeasureInfo]) -> List[tuple]:
+        """Expand measures according to Guitar Pro repeat markings.
+        
+        Guitar Pro repeat logic:
+        - repeat_open=True: Start of repeat section (can be implicit from beginning)
+        - repeat_close>0: End of repeat with number of total plays (including first)
+        - repeat_alternative>0: Alternative endings (1st time, 2nd time, etc.)
+        
+        Returns:
+            List of tuples (current_measure_number, original_measure_info)
+        """
+        expanded = []
+        current_measure_num = 1
+        i = 0
+        
+        while i < len(measures):
+            measure = measures[i]
+            
+            # Check if we're starting a repeat section
+            has_close_ahead, repeat_close_measure_index = self._has_repeat_close_ahead(measures, i)
+            if measure.repeat_open and has_close_ahead:
+                repeat_start_idx = i
+                repeat_end_idx = repeat_close_measure_index
+                repeat_close_measure = measures[repeat_close_measure_index]
+                repeat_count = repeat_close_measure.repeat_close
+
+                # Extract the repeat section (including the repeat close measure)
+                repeat_section = measures[repeat_start_idx:repeat_end_idx+1]
+                
+                # Separate main section from alternative endings
+                main_section = []
+                alternatives = {}
+                
+                for section_measure in repeat_section:
+                    if section_measure.repeat_alternative > 0:
+                        alt_num = section_measure.repeat_alternative
+                        if alt_num not in alternatives:
+                            alternatives[alt_num] = []
+                        alternatives[alt_num].append(section_measure)
+                    else:
+                        main_section.append(section_measure)
+                
+                # Generate the expanded repeat
+                for play_num in range(1, repeat_count + 2):
+                    # Add main section measures for this iteration
+                    for section_measure in main_section:
+                        expanded.append((current_measure_num, section_measure))
+                        current_measure_num += 1
+                    
+                    # Add appropriate alternative ending for this play
+                    if play_num in alternatives:
+                        for alt_measure in alternatives[play_num]:
+                            expanded.append((current_measure_num, alt_measure))
+                            current_measure_num += 1
+                
+                # Move past the repeat section
+                i = repeat_end_idx + 1
+            else:
+                # Regular measure without repeat
+                expanded.append((current_measure_num, measure))
+                current_measure_num += 1
+                i += 1
+        
+        return expanded
+    
+    def _has_repeat_close_ahead(self, measures: List[SerializableMeasureInfo], start_idx: int) -> Tuple[bool, Optional[int]]:
+        """Check if there's a repeat_close ahead without explicit repeat_open."""
+        for j in range(start_idx, len(measures)):
+            if measures[j].repeat_close > 0:
+                return True, j
+            # Stop looking if we hit another repeat_open
+            if j > start_idx and measures[j].repeat_open:
+                return False, None
+        return False, None
     
     def _get_background_color_for_measure(self, measure_number: int, use_dynamic_colors: bool) -> tuple:
         """Generate a background color for a specific measure."""
@@ -353,13 +444,14 @@ class VideoExportHandlerImpl(VideoExportHandler):
         height: int,
         current_time: float,
         count_in_measures: int = 0,
-        command: VideoExportCommand = None
+        command: VideoExportCommand = None,
+        expanded_measures: List[tuple] = None
     ) -> np.ndarray:
         """Create a single video frame with dynamic tempo and time signature."""
         
         # Get dynamic tempo and time signature for current time
-        tempo_bpm, time_signature_num = self._get_tempo_and_time_sig_at_time(parsed_data, current_time, count_in_measures)
-        current_measure, current_beat, current_quarter, seconds_per_measure = self._get_current_measure_and_position(parsed_data, current_time, count_in_measures)
+        tempo_bpm, time_signature_num = self._get_tempo_and_time_sig_at_time(parsed_data, current_time, count_in_measures, expanded_measures)
+        current_measure, tab_measure, current_beat, current_quarter, seconds_per_measure = self._get_current_measure_and_position(parsed_data, current_time, count_in_measures, expanded_measures)
         
         # Determine background color based on current measure
         use_dynamic_colors = command.use_dynamic_colors if command else False
@@ -408,12 +500,17 @@ class VideoExportHandlerImpl(VideoExportHandler):
         else:
             # Regular song measures
             # Get current section name
-            current_section = self._get_current_section(parsed_data.measures, current_measure)
+            current_section = self._get_current_section(parsed_data.measures, tab_measure)
             
-            # Current measure (large, centered)
+            # Current measure (large, centered) - show both current and tab measure
             measure_text = f"Measure {current_measure}"
             cv2.putText(frame, measure_text, (width//2 - 150, height//2 - 140), 
                        font, 3, colors['accent1'], 4, cv2.LINE_AA)
+            
+            # Tab measure number (smaller, below main measure)
+            tab_measure_text = f"Tab: {tab_measure}"
+            cv2.putText(frame, tab_measure_text, (width//2 - 60, height//2 - 100), 
+                       font, 1.5, colors['secondary'], 3, cv2.LINE_AA)
             
             # Current section
             section_text = f"Section: {current_section}"
@@ -487,7 +584,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
             cv2.putText(frame, str(beat_num), (x-8, indicator_y+8), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, colors['primary'], 2)
     
-    async def _generate_metronome_audio(self, parsed_data: ParsedTabData, duration: float, count_in_measures: int = 0) -> str:
+    async def _generate_metronome_audio(self, parsed_data: ParsedTabData, duration: float, count_in_measures: int = 0, expanded_measures: List[tuple] = None) -> str:
         """Generate metronome audio with dynamic tempo changes and emphasis on beat 1."""
         
         sample_rate = 44100
@@ -542,8 +639,10 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 if current_time >= duration:
                     break
         
-        # Then generate song measures
-        for measure in parsed_data.measures:
+        # Then generate song measures (use expanded measures if available)
+        measures_to_use = expanded_measures if expanded_measures else [(i+1, m) for i, m in enumerate(parsed_data.measures)]
+        
+        for current_measure_num, measure in measures_to_use:
             # Get tempo and time signature for this measure
             measure_tempo = measure.tempo_bpm if measure.tempo_bpm else current_tempo
             measure_time_sig_num = measure.time_signature.numerator if measure.time_signature else 4
