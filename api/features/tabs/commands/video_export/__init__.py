@@ -502,15 +502,10 @@ class VideoExportHandlerImpl(VideoExportHandler):
             # Get current section name
             current_section = self._get_current_section(parsed_data.measures, tab_measure)
             
-            # Current measure (large, centered) - show both current and tab measure
-            measure_text = f"Measure {current_measure}"
-            cv2.putText(frame, measure_text, (width//2 - 150, height//2 - 140), 
+            # Current measure with tab measure in parentheses
+            measure_text = f"Measure {current_measure} (tab: {tab_measure})"
+            cv2.putText(frame, measure_text, (width//2 - 200, height//2 - 140), 
                        font, 3, colors['accent1'], 4, cv2.LINE_AA)
-            
-            # Tab measure number (smaller, below main measure)
-            tab_measure_text = f"Tab: {tab_measure}"
-            cv2.putText(frame, tab_measure_text, (width//2 - 60, height//2 - 100), 
-                       font, 1.5, colors['secondary'], 3, cv2.LINE_AA)
             
             # Current section
             section_text = f"Section: {current_section}"
