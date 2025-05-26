@@ -517,10 +517,6 @@ class VideoExportHandlerImpl(VideoExportHandler):
             cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 60), 
                        font, 2, colors['accent2'], 3, cv2.LINE_AA)
         
-        # Beat counter
-        beat_text = f"Beat: {current_beat}/{time_signature_num}"
-        cv2.putText(frame, beat_text, (width//2 - 100, height//2 + 40), 
-                   font, 2, colors['primary'], 3, cv2.LINE_AA)
         
         # Visual metronome
         self._draw_metronome(frame, width, height, current_time, tempo_bpm, time_signature_num, colors)
