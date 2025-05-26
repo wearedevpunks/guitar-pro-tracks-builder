@@ -472,12 +472,16 @@ class VideoExportHandlerImpl(VideoExportHandler):
             title = command.filename.rsplit('.', 1)[0] if '.' in command.filename else command.filename
         else:
             title = parsed_data.song_info.title or "Metronome"
-        cv2.putText(frame, title, (width//2 - len(title)*20, 80), 
+        title_size = cv2.getTextSize(title, font, 2, 3)[0]
+        title_x = (width - title_size[0]) // 2
+        cv2.putText(frame, title, (title_x, 80), 
                    font, 2, colors['primary'], 3, cv2.LINE_AA)
         
         # Tempo
         tempo_text = f"Tempo: {tempo_bpm} BPM"
-        cv2.putText(frame, tempo_text, (50, height - 50), 
+        tempo_size = cv2.getTextSize(tempo_text, font, 1, 2)[0]
+        tempo_x = (width - tempo_size[0]) // 2
+        cv2.putText(frame, tempo_text, (tempo_x, height - 50), 
                    font, 1, colors['secondary'], 2, cv2.LINE_AA)
         
         # Check if we're in count-in phase
@@ -490,12 +494,16 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 measure_text = f"Count-in {count_in_number}"
             else:
                 measure_text = f"Count-in {count_in_number}"
-            cv2.putText(frame, measure_text, (width//2 - 180, height//2 - 140), 
+            measure_size = cv2.getTextSize(measure_text, font, 3, 4)[0]
+            measure_x = (width - measure_size[0]) // 2
+            cv2.putText(frame, measure_text, (measure_x, height//2 - 140), 
                        font, 3, colors['count_in'], 4, cv2.LINE_AA)
             
             # Current section (disabled during count-in)
             section_text = "Ready to start..."
-            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 60), 
+            section_size = cv2.getTextSize(section_text, font, 2, 3)[0]
+            section_x = (width - section_size[0]) // 2
+            cv2.putText(frame, section_text, (section_x, height//2 - 60), 
                        font, 2, colors['count_in'], 3, cv2.LINE_AA)
         else:
             # Regular song measures
@@ -504,12 +512,16 @@ class VideoExportHandlerImpl(VideoExportHandler):
             
             # Current measure with tab measure in parentheses
             measure_text = f"Measure {current_measure} (tab: {tab_measure})"
-            cv2.putText(frame, measure_text, (width//2 - 200, height//2 - 140), 
+            measure_size = cv2.getTextSize(measure_text, font, 3, 4)[0]
+            measure_x = (width - measure_size[0]) // 2
+            cv2.putText(frame, measure_text, (measure_x, height//2 - 140), 
                        font, 3, colors['accent1'], 4, cv2.LINE_AA)
             
             # Current section
             section_text = f"Section: {current_section}"
-            cv2.putText(frame, section_text, (width//2 - len(section_text)*15, height//2 - 60), 
+            section_size = cv2.getTextSize(section_text, font, 2, 3)[0]
+            section_x = (width - section_size[0]) // 2
+            cv2.putText(frame, section_text, (section_x, height//2 - 60), 
                        font, 2, colors['accent2'], 3, cv2.LINE_AA)
         
         
