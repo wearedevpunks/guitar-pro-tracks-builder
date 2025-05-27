@@ -21,8 +21,8 @@ dnspython==2.6.1
 email_validator==2.2.0
 eval_type_backport==0.2.2
 fasta2a==0.2.6
-fastapi==0.111.1
-fastapi-cli==0.0.4
+fastapi==0.115.12
+fastapi-cli==0.0.7
 fastavro==1.11.1
 filelock==3.18.0
 fsspec==2025.5.0
