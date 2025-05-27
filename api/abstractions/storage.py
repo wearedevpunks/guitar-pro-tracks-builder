@@ -104,6 +104,19 @@ class FileProviderBase(ABC):
             True if successful, False otherwise
         """
         pass
+    
+    @abstractmethod
+    async def get_file_download_url(self, file_path: str, expiration_seconds: int = 3600) -> Optional[str]:
+        """Get a downloadable URL for a file.
+        
+        Args:
+            file_path: The path of the file
+            expiration_seconds: URL expiration time in seconds (default: 1 hour)
+            
+        Returns:
+            Download URL if successful, None otherwise
+        """
+        pass
 
 
 class FileReference(BaseModel):

@@ -2,6 +2,7 @@
 
 from api.features.tabs.service import TabsService
 from api.infrastructure.logging import get_logger
+from api.services.storage import get_storage_service
 from ..dto import VideoExportRequest, VideoExportResponse
 
 
@@ -106,11 +107,28 @@ async def export_song_video_action(
         
         logger.info(f"Video export completed successfully for song: {request.song_id}")
         
+        # Generate download URL for the video file
+        download_url = None
+        if video_result.video_file:
+            try:
+                storage_service = get_storage_service()
+                download_url = await storage_service.get_file_download_url(
+                    video_result.video_file, 
+                    expiration_seconds=3600  # 1 hour expiration
+                )
+                if download_url:
+                    logger.info(f"Generated download URL for video: {request.song_id}")
+                else:
+                    logger.warning(f"Could not generate download URL for video: {request.song_id}")
+            except Exception as e:
+                logger.exception(f"Error generating download URL for video {request.song_id}: {e}")
+        
         return VideoExportResponse(
             success=True,
             message="Video exported successfully",
             song_id=request.song_id,
             video_file=video_result.video_file,
+            download_url=download_url,
             duration_seconds=video_result.duration_seconds,
             total_measures=video_result.total_measures,
             export_settings=export_settings

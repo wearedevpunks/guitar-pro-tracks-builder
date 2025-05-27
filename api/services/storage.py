@@ -396,6 +396,43 @@ class FileStorageService:
         
         return result
     
+    async def get_file_download_url(self, file_ref: Union[str, FileReference], expiration_seconds: int = 3600) -> Optional[str]:
+        """Get a downloadable URL for a file.
+        
+        Args:
+            file_ref: File reference (path string or FileReference object)
+            expiration_seconds: URL expiration time in seconds (default: 1 hour)
+            
+        Returns:
+            Download URL if successful, None otherwise
+        """
+        try:
+            provider = self._get_provider_for_reference(file_ref)
+            
+            # Extract the actual file path
+            if isinstance(file_ref, FileReference):
+                file_path = file_ref.reference
+                self.logger.debug(f"Getting download URL for file: {file_ref}")
+            else:
+                file_path = file_ref
+                self.logger.debug(f"Getting download URL for file: {file_path}")
+            
+            url = await provider.get_file_download_url(file_path, expiration_seconds)
+            
+            if url:
+                self.logger.info(f"Successfully generated download URL for {file_ref}")
+            else:
+                self.logger.warning(f"Failed to generate download URL for {file_ref}")
+            
+            return url
+            
+        except NotImplementedError as e:
+            self.logger.warning(f"Download URLs not supported by provider for {file_ref}: {e}")
+            return None
+        except ValueError as e:
+            self.logger.exception(f"Error getting download URL for {file_ref}: {e}")
+            return None
+    
     def get_provider_info(self) -> dict:
         """Get information about the current storage provider.
         

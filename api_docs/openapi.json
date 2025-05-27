@@ -1763,6 +1763,18 @@
             ],
             "description": "Reference to the exported video file"
           },
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url",
+            "description": "Download URL for the exported video file"
+          },
           "duration_seconds": {
             "type": "number",
             "title": "Duration Seconds",
@@ -1797,6 +1809,7 @@
         "title": "VideoExportResponse",
         "description": "Response model for video export.",
         "example": {
+          "download_url": "https://s3.amazonaws.com/bucket/videos/123e4567-e89b-12d3-a456-426614174000/master_of_puppets_metronome.mp4?AWSAccessKeyId=...",
           "duration_seconds": 240.5,
           "export_settings": {
             "format": "mp4",

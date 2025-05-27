@@ -104,6 +104,7 @@ class VideoExportResponse(BaseModel):
     message: str = Field(..., description="Response message")
     song_id: Optional[str] = Field(None, description="ID of the exported song")
     video_file: Optional[FileReference] = Field(None, description="Reference to the exported video file")
+    download_url: Optional[str] = Field(None, description="Download URL for the exported video file")
     duration_seconds: float = Field(0, description="Total video duration in seconds")
     total_measures: int = Field(0, description="Total number of measures in the video")
     export_settings: Optional[dict] = Field(None, description="Settings used for export")
@@ -118,6 +119,7 @@ class VideoExportResponse(BaseModel):
                     "provider": "s3",
                     "reference": "videos/123e4567-e89b-12d3-a456-426614174000/master_of_puppets_metronome.mp4"
                 },
+                "download_url": "https://s3.amazonaws.com/bucket/videos/123e4567-e89b-12d3-a456-426614174000/master_of_puppets_metronome.mp4?AWSAccessKeyId=...",
                 "duration_seconds": 240.5,
                 "total_measures": 64,
                 "export_settings": {

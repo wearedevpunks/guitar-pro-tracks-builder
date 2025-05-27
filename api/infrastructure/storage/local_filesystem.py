@@ -124,3 +124,10 @@ class LocalFilesystemFileProvider(FileProviderBase):
             return True
         except Exception:
             return False
+    
+    async def get_file_download_url(self, file_path: str, expiration_seconds: int = 3600) -> Optional[str]:
+        """Get a downloadable URL for a file.
+        
+        Local filesystem provider does not support downloadable URLs.
+        """
+        raise NotImplementedError("Local filesystem provider does not support downloadable URLs")

@@ -296,3 +296,32 @@ class AwsS3FileProvider(FileProviderBase):
         except Exception as e:
             self.logger.exception(f"Unexpected error moving file from {source_key} to {dest_key}: {e}")
             return False
+    
+    async def get_file_download_url(self, file_path: str, expiration_seconds: int = 3600) -> Optional[str]:
+        """Generate a presigned URL for downloading a file from S3."""
+        s3_key = self._get_s3_key(file_path)
+        self.logger.debug(f"Generating presigned URL for S3 file: {s3_key}")
+        
+        try:
+            # Check if file exists first
+            if not await self.file_exists(file_path):
+                self.logger.warning(f"File does not exist in S3: {s3_key}")
+                return None
+            
+            # Generate presigned URL
+            url = self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': self.bucket_name, 'Key': s3_key},
+                ExpiresIn=expiration_seconds
+            )
+            self.logger.info(f"Successfully generated presigned URL for {s3_key} (expires in {expiration_seconds}s)")
+            return url
+        except ClientError as e:
+            self.logger.exception(f"AWS error generating presigned URL for {s3_key}: {e}")
+            return None
+        except BotoCoreError as e:
+            self.logger.exception(f"AWS configuration error generating presigned URL for {s3_key}: {e}")
+            return None
+        except Exception as e:
+            self.logger.exception(f"Unexpected error generating presigned URL for {s3_key}: {e}")
+            return None
