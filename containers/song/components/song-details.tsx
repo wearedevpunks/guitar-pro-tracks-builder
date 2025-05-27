@@ -62,23 +62,11 @@ export function SongDetails({ song, onEditSong }: SongDetailsProps) {
       }
     },
     onSuccess: (data) => {
-      // Create download link
-      const downloadUrl = `/api/files/${data.video_file!.provider}/${
-        data.video_file!.reference
-      }`
+      if (!data.download_url) {
+        throw new Error("Download URL is missing. Cannot export.")
+      }
+      window.open(data.download_url, "_blank")
 
-      // Trigger download
-      const link = document.createElement("a")
-      link.href = downloadUrl
-      link.download = `song-${song.song_id}-export.mp4`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      // Show success message with details
-      alert(
-        `Export successful! Video duration: ${data.duration_seconds}s with ${data.total_measures} measures.`
-      )
       setShowExportDialog(false)
     },
     onError: (error) => {

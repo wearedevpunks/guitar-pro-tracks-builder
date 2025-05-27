@@ -11,12 +11,7 @@ export function FileDropZone({ onFileSelect }: FileDropZoneProps) {
     const files = e.target.files
     if (files && files.length > 0) {
       const file = files[0]
-      if (
-        file.name.endsWith(".gp") ||
-        file.name.endsWith(".gpx") ||
-        file.name.endsWith(".gp5") ||
-        file.name.endsWith(".gp4")
-      ) {
+      if (file.name.endsWith(".gp5")) {
         setUploadedFile(file)
         onFileSelect(file)
       }
@@ -32,14 +27,14 @@ export function FileDropZone({ onFileSelect }: FileDropZoneProps) {
               Drop your Guitar Pro file here
             </p>
             <p className="text-xs text-gray-600 mt-2">
-              Supports .gp, .gpx, .gp5, .gp4 files
+              Supports .gp5 files only
             </p>
           </div>
         </div>
 
         <input
           type="file"
-          accept=".gp,.gpx,.gp5,.gp4"
+          accept=".gp5"
           onChange={handleFileInput}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />

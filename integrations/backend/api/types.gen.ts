@@ -636,6 +636,10 @@ export type VideoExportResponse = {
      */
     video_file?: FileReference | null;
     /**
+     * Download URL for the exported video file
+     */
+    download_url?: string | null;
+    /**
      * Total video duration in seconds
      */
     duration_seconds?: number;
