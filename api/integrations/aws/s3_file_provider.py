@@ -36,21 +36,56 @@ class AwsS3FileProvider(FileProviderBase):
         # Initialize S3 client with credentials from settings if available
         session_kwargs = {}
         if settings.aws_access_key_id and settings.aws_secret_access_key:
+            self.logger.info(f"Using explicit AWS credentials from settings")
             session_kwargs.update({
                 'aws_access_key_id': settings.aws_access_key_id,
                 'aws_secret_access_key': settings.aws_secret_access_key,
                 'region_name': region
             })
         elif region:
+            self.logger.info(f"Using default AWS credentials with region: {region}")
             session_kwargs['region_name'] = region
+        else:
+            self.logger.info(f"Using default AWS credentials and region")
             
         session = boto3.Session(**session_kwargs)
-        self.s3_client = session.client('s3')
         
-        # Verify bucket access
+        # Create S3 client with explicit configuration
+        s3_client_kwargs = {}
+        if region:
+            s3_client_kwargs['region_name'] = region
+            
+        self.s3_client = session.client('s3', **s3_client_kwargs)
+        self.region = region  # Store region for presigned URL generation
+        
+        # Verify bucket access and get bucket region
         try:
+            # First check bucket access
             self.s3_client.head_bucket(Bucket=self.bucket_name)
             self.logger.info(f"Successfully verified access to S3 bucket '{self.bucket_name}'")
+            
+            # Try to get the bucket's actual region
+            try:
+                location_response = self.s3_client.get_bucket_location(Bucket=self.bucket_name)
+                bucket_region = location_response.get('LocationConstraint')
+                # AWS returns None for us-east-1 region
+                bucket_region = bucket_region or 'us-east-1'
+                
+                if region and bucket_region != region:
+                    self.logger.warning(f"Configured region '{region}' doesn't match bucket region '{bucket_region}'. Using bucket region.")
+                    self.region = bucket_region
+                    # Recreate client with correct region
+                    s3_client_kwargs['region_name'] = bucket_region
+                    self.s3_client = session.client('s3', **s3_client_kwargs)
+                elif not region:
+                    self.logger.info(f"No region configured, using bucket region: {bucket_region}")
+                    self.region = bucket_region
+                    s3_client_kwargs['region_name'] = bucket_region
+                    self.s3_client = session.client('s3', **s3_client_kwargs)
+                
+            except ClientError as loc_e:
+                self.logger.warning(f"Could not determine bucket region: {loc_e}")
+                
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == '404':
@@ -308,16 +343,29 @@ class AwsS3FileProvider(FileProviderBase):
                 self.logger.warning(f"File does not exist in S3: {s3_key}")
                 return None
             
-            # Generate presigned URL
+            # Log the configuration being used for presigned URL generation
+            self.logger.debug(f"Generating presigned URL with bucket: {self.bucket_name}, key: {s3_key}, region: {self.region}")
+            
+            # Generate presigned URL with explicit configuration
+            params = {
+                'Bucket': self.bucket_name, 
+                'Key': s3_key
+            }
+            
             url = self.s3_client.generate_presigned_url(
                 'get_object',
-                Params={'Bucket': self.bucket_name, 'Key': s3_key},
+                Params=params,
                 ExpiresIn=expiration_seconds
             )
+            
             self.logger.info(f"Successfully generated presigned URL for {s3_key} (expires in {expiration_seconds}s)")
+            self.logger.debug(f"Generated URL: {url}")
             return url
+            
         except ClientError as e:
-            self.logger.exception(f"AWS error generating presigned URL for {s3_key}: {e}")
+            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_message = e.response.get('Error', {}).get('Message', str(e))
+            self.logger.exception(f"AWS ClientError generating presigned URL for {s3_key} - Code: {error_code}, Message: {error_message}")
             return None
         except BotoCoreError as e:
             self.logger.exception(f"AWS configuration error generating presigned URL for {s3_key}: {e}")
