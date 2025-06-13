@@ -604,7 +604,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
         t_click = np.linspace(0, click_duration, click_samples)
         
         beat_1_click = np.sin(2 * np.pi * beat_1_freq * t_click) * 0.5
-        other_beat_click = np.sin(2 * np.pi * other_beat_freq * t_click) * 0.3
+        other_beat_click = np.sin(2 * np.pi * other_beat_freq * t_click) * 0.5
         
         # Apply envelope to avoid clicks
         envelope = np.exp(-t_click * 10)
@@ -660,7 +660,7 @@ class VideoExportHandlerImpl(VideoExportHandler):
                 # Add click if within audio bounds
                 if sample_idx + click_samples <= total_samples:
                     if beat_num == 1:  # Always beat 1 of measure gets high pitch
-                        audio[sample_idx:sample_idx + click_samples] += beat_1_click
+                        audio[sample_idx:sample_idx + click_samples] += other_beat_click
                     else:
                         audio[sample_idx:sample_idx + click_samples] += other_beat_click
                 
